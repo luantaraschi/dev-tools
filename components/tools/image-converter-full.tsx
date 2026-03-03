@@ -27,6 +27,8 @@ export function FullImageConverterTool() {
       setOutput("")
     }
 
+    let sourceUrl: string | null = null
+
     try {
       const lowerName = file.name.toLowerCase()
       const isHeic =
@@ -42,10 +44,17 @@ export function FullImageConverterTool() {
         sourceBlob = Array.isArray(converted) ? converted[0] : converted
       }
 
-      const bitmap = await createImageBitmap(sourceBlob)
+      sourceUrl = URL.createObjectURL(sourceBlob)
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const element = new Image()
+        element.onload = () => resolve(element)
+        element.onerror = () => reject(new Error("Failed to decode image"))
+        element.src = sourceUrl as string
+      })
+
       const canvas = document.createElement("canvas")
-      canvas.width = bitmap.width
-      canvas.height = bitmap.height
+      canvas.width = image.naturalWidth || image.width
+      canvas.height = image.naturalHeight || image.height
       const context = canvas.getContext("2d", { alpha: true })
       if (!context) throw new Error("Canvas not supported")
 
@@ -58,7 +67,7 @@ export function FullImageConverterTool() {
 
       context.imageSmoothingEnabled = true
       context.imageSmoothingQuality = "high"
-      context.drawImage(bitmap, 0, 0)
+        context.drawImage(image, 0, 0, canvas.width, canvas.height)
 
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
@@ -80,6 +89,9 @@ export function FullImageConverterTool() {
       const message = caughtError instanceof Error ? caughtError.message : "Conversion failed"
       setError(message)
     } finally {
+      if (sourceUrl) {
+        URL.revokeObjectURL(sourceUrl)
+      }
       setLoading(false)
     }
   }

@@ -120,7 +120,7 @@ export function FullImageCompressorTool() {
   }
 
   const handleCompress = useCallback(async () => {
-    if (!file) return
+    if (!file || isWorking) return
 
     setIsWorking(true)
     setError("")
@@ -128,23 +128,25 @@ export function FullImageCompressorTool() {
     try {
       const out = await compressImage(file, settings)
       const url = URL.createObjectURL(out.blob)
-      cleanupUrl(result?.url)
-      setResult({ blob: out.blob, url, width: out.width, height: out.height, mimeType: out.mimeType })
+      setResult((previous) => {
+        if (previous?.url) {
+          URL.revokeObjectURL(previous.url)
+        }
+        return {
+          blob: out.blob,
+          url,
+          width: out.width,
+          height: out.height,
+          mimeType: out.mimeType,
+        }
+      })
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : "Something went wrong."
       setError(message)
     } finally {
       setIsWorking(false)
     }
-  }, [file, result?.url, settings])
-
-  useEffect(() => {
-    if (!file || !result) return
-    const timeout = setTimeout(() => {
-      void handleCompress()
-    }, 300)
-    return () => clearTimeout(timeout)
-  }, [settings.mimeType, settings.quality, settings.keepOriginalSize, settings.maxWidth, settings.maxHeight, file, result, handleCompress])
+  }, [file, isWorking, settings])
 
   const setMaxWidthWithRatio = (nextWidth: number) => {
     const width = clamp(nextWidth, 64, 8000)
