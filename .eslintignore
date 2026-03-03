@@ -1,0 +1,13 @@
+.next
+node_modules
+next-env.d.ts
+_projetos_originais
+bg-remover
+color-harmony
+color-palette-extractor
+image-converter
+Image-Compressor
+password-generator
+qr-generator
+text-to-pdf
+time-converter

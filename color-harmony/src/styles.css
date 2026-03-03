@@ -1,0 +1,546 @@
+/* Design Tokens */
+:root {
+  --bg: #0e1014;
+  --surface: #141821;
+  --surfaceHover: #1a2029;
+  --border: rgba(255, 255, 255, 0.08);
+  --borderHover: rgba(255, 255, 255, 0.15);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.55);
+  --shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  --shadowSm: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --r: 16px;
+  --rSm: 12px;
+  --rXs: 8px;
+  --accent: #6366f1;
+}
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Page Layout */
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Section */
+.topSection {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 32px 24px;
+}
+
+.topSectionInner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 32px;
+}
+
+/* Color Wheel */
+.wheelArea {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.colorWheel {
+  display: block;
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+}
+
+/* Color Info Area */
+.colorInfoArea {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 420px;
+  justify-content: center;
+}
+
+.colorPreviewLarge {
+  width: 100%;
+  height: 64px;
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadowSm);
+}
+
+.colorPreviewHex {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.colorControls {
+  display: flex;
+  gap: 8px;
+}
+
+.hexInput {
+  flex: 1;
+  height: 40px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--rSm);
+  padding: 0 14px;
+  font-family: ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.hexInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.controlButtons {
+  display: flex;
+  gap: 6px;
+}
+
+.controlBtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--rSm);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.controlBtn:hover {
+  background: var(--surfaceHover);
+  color: var(--text);
+  border-color: var(--borderHover);
+}
+
+.controlBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Color Values - Single row */
+.colorValues {
+  display: flex;
+  gap: 6px;
+}
+
+.valueBtn {
+  flex: 1;
+  min-width: 160px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--rSm);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  font-family: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.valueBtn:hover {
+  background: var(--surfaceHover);
+  border-color: var(--borderHover);
+}
+
+.valueBtn svg {
+  color: var(--muted);
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+}
+
+.valueLabel {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.valueText {
+  font-family: ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.valueCopied {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Recent Colors */
+.recentArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 28px;
+}
+
+.recentLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.recentSwatches {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+
+.recentSwatch {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--rXs);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.recentSwatch:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.hiddenColorInput {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Main Content */
+.main {
+  flex: 1;
+  padding: 32px 24px;
+  padding-bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Harmonies Container - Row-based layout */
+.harmoniesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.harmonyRow {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+
+.harmonyRow .harmonyCard {
+  flex: 1;
+  width: auto;
+}
+
+/* Harmony Card */
+.harmonyCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.harmonyHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.harmonyTitle {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.harmonyDesc {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Swatches */
+.swatchRow {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.swatch {
+  flex: 1;
+  min-height: 100px;
+  border-radius: var(--rSm);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-family: inherit;
+  padding: 12px 6px;
+}
+
+.swatch:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+.swatch:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.swatchHex {
+  font-family: ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.swatchLabel {
+  font-size: 8px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+
+.swatchCopied {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  animation: copiedPulse 0.3s ease;
+}
+
+@keyframes copiedPulse {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.swatch.copied {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+
+/* Footer */
+.credit {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 14px;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(14, 16, 20, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  z-index: 50;
+}
+
+.creditLink {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.12s ease;
+}
+
+.creditLink:hover {
+  color: var(--accent);
+}
+
+/* ========== RESPONSIVE ========== */
+
+/* Large screens */
+@media (min-width: 1500px) {
+  .harmoniesContainer {
+    max-width: 1600px;
+  }
+
+  .swatch {
+    min-height: 120px;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 920px) {
+  .topSectionInner {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .colorInfoArea {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .main {
+    padding: 24px 16px;
+    padding-bottom: 80px;
+  }
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .harmonyRow {
+    flex-direction: column;
+  }
+
+  .harmonyRow .harmonyCard {
+    flex: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 650px) {
+  .topSection {
+    padding: 24px 16px;
+  }
+
+  .colorValues {
+    flex-wrap: wrap;
+  }
+
+  .valueBtn {
+    flex: 1 1 calc(50% - 3px);
+  }
+
+  .valueBtn:last-child {
+    flex: 1 1 100%;
+  }
+
+  .swatch {
+    min-height: 85px;
+  }
+
+  .harmoniesContainer {
+    gap: 16px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .colorInfoArea {
+    min-width: unset;
+  }
+
+  .colorPreviewLarge {
+    height: 56px;
+  }
+
+  .colorPreviewHex {
+    font-size: 18px;
+  }
+
+  .harmonyCard {
+    padding: 14px;
+  }
+
+  .swatch {
+    min-height: 75px;
+  }
+
+  .swatchHex {
+    font-size: 9px;
+  }
+
+  .valueBtn {
+    padding: 6px 8px;
+  }
+
+  .valueBtn svg {
+    display: none;
+  }
+
+  .colorWheel {
+    width: 180px !important;
+    height: 180px !important;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 380px) {
+  .swatchRow {
+    flex-wrap: wrap;
+  }
+
+  .swatch {
+    flex: 1 1 calc(50% - 4px);
+    min-height: 70px;
+  }
+
+  .controlBtn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .hexInput {
+    height: 36px;
+    font-size: 13px;
+  }
+
+  .colorWheel {
+    width: 160px !important;
+    height: 160px !important;
+  }
+}
