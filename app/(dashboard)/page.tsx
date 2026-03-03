@@ -45,7 +45,7 @@ export default function DashboardPage() {
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
           Welcome to{" "}
-          <span className="bg-linear-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-[#0f172a] via-[#1d4ed8] to-[#0f766e] bg-clip-text text-transparent dark:from-[#f8fafc] dark:via-[#93c5fd] dark:to-[#5eead4]">
             Dev Tools
           </span>
         </h1>
@@ -60,15 +60,15 @@ export default function DashboardPage() {
 
       <div className="flex flex-wrap gap-6 rounded-xl border border-border bg-muted/30 px-6 py-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+          <div className="h-2 w-2 rounded-full bg-[hsl(var(--success))]" />
           <span className="font-medium text-foreground">{tools.length} tools available</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-blue-500" />
+          <div className="h-2 w-2 rounded-full bg-[hsl(var(--info))]" />
           <span className="text-muted-foreground">Next.js 15 App Router</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-violet-500" />
+          <div className="h-2 w-2 rounded-full bg-[hsl(var(--warning))]" />
           <span className="text-muted-foreground">Tailwind CSS + Shadcn UI</span>
         </div>
       </div>

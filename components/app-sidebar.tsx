@@ -7,6 +7,7 @@ import {
   Braces,
   Clock,
   FileText,
+  Info,
   ImageIcon,
   Key,
   LayoutDashboard,
@@ -18,7 +19,7 @@ import {
   Wrench,
 } from "lucide-react"
 
-import { tools } from "@/lib/tools"
+import { ThemeSelector } from "@/components/theme-selector"
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +33,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
+import { tools } from "@/lib/tools"
 
 const toolIcons: Record<string, LucideIcon> = {
   "time-converter": Clock,
@@ -99,6 +101,18 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === "/about"}
+                  tooltip="Project Info"
+                >
+                  <Link href="/about">
+                    <Info />
+                    <span>Project Info</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -135,6 +149,9 @@ export function AppSidebar() {
       <SidebarSeparator />
 
       <SidebarFooter>
+        <div className="px-2 py-1 group-data-[collapsible=icon]:hidden">
+          <ThemeSelector />
+        </div>
         <p className="px-2 py-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
           © {new Date().getFullYear()} Dev Tools • Luan Taraschi
         </p>

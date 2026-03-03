@@ -126,7 +126,7 @@ export function FullPasswordGeneratorTool() {
               {[0, 1, 2, 3].map((index) => (
                 <div
                   key={index}
-                  className={`h-1.5 rounded-full ${index < strength.score ? "bg-emerald-500" : "bg-muted"}`}
+                  className={`h-1.5 rounded-full ${index < strength.score ? "bg-[hsl(var(--success))]" : "bg-muted"}`}
                 />
               ))}
             </div>

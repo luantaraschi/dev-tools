@@ -413,8 +413,8 @@ export function FullTimeConverterTool() {
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs ${
                             working
-                              ? "bg-emerald-500/15 text-emerald-500"
-                              : "bg-amber-500/15 text-amber-500"
+                              ? "bg-[hsl(var(--success)/0.15)] text-[hsl(var(--success))]"
+                              : "bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))]"
                           }`}
                         >
                           {working ? "Working" : "Off"}
@@ -529,8 +529,8 @@ export function FullTimeConverterTool() {
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs ${
                         working
-                          ? "bg-emerald-500/15 text-emerald-500"
-                          : "bg-amber-500/15 text-amber-500"
+                          ? "bg-[hsl(var(--success)/0.15)] text-[hsl(var(--success))]"
+                          : "bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))]"
                       }`}
                     >
                       {working ? "Working" : "Off"}
@@ -569,7 +569,7 @@ export function FullTimeConverterTool() {
             }`}
           >
             <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
+              className={`absolute top-0.5 h-5 w-5 rounded-full border border-border bg-background shadow-sm transition ${
                 use24Hour ? "left-5" : "left-0.5"
               }`}
             />
