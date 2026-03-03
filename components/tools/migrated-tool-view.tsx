@@ -1,9 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import QRCode from "qrcode"
 import { Button } from "@/components/ui/button"
+import { FullPasswordGeneratorTool } from "@/components/tools/password-generator-full"
+import { FullImageConverterTool } from "@/components/tools/image-converter-full"
+import { FullImageCompressorTool } from "@/components/tools/image-compressor-full"
 import { FullTimeConverterTool } from "@/components/tools/time-converter-full"
 import { FullTextToPdfTool } from "@/components/tools/text-to-pdf-full"
 
@@ -25,157 +28,12 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-function formatBytes(bytes: number) {
-  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
-  const units = ["B", "KB", "MB", "GB"]
-  let value = bytes
-  let unit = 0
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024
-    unit += 1
-  }
-  return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unit]}`
-}
-
-async function loadBitmap(source: Blob) {
-  if ("createImageBitmap" in window) {
-    return createImageBitmap(source)
-  }
-
-  const url = URL.createObjectURL(source)
-  try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const element = new Image()
-      element.onload = () => resolve(element)
-      element.onerror = () => reject(new Error("Falha ao carregar imagem"))
-      element.src = url
-    })
-    return image
-  } finally {
-    URL.revokeObjectURL(url)
-  }
-}
-
-async function convertImageBlob(input: Blob, format: string, quality: number) {
-  const bitmap = await loadBitmap(input)
-  const width = "width" in bitmap ? bitmap.width : 0
-  const height = "height" in bitmap ? bitmap.height : 0
-
-  const canvas = document.createElement("canvas")
-  canvas.width = width
-  canvas.height = height
-
-  const context = canvas.getContext("2d", { alpha: true })
-  if (!context) {
-    throw new Error("Canvas não suportado no navegador")
-  }
-
-  if (format === "image/jpeg") {
-    context.fillStyle = "#ffffff"
-    context.fillRect(0, 0, canvas.width, canvas.height)
-  } else {
-    context.clearRect(0, 0, canvas.width, canvas.height)
-  }
-
-  context.imageSmoothingEnabled = true
-  context.imageSmoothingQuality = "high"
-  context.drawImage(bitmap as CanvasImageSource, 0, 0, canvas.width, canvas.height)
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (result) => {
-        if (!result) {
-          reject(new Error("Falha ao converter imagem"))
-          return
-        }
-        resolve(result)
-      },
-      format,
-      format === "image/png" ? undefined : quality
-    )
-  })
-
-  return blob
-}
-
 function TimeConverterTool() {
   return <FullTimeConverterTool />
 }
 
 function PasswordGeneratorTool() {
-  const [length, setLength] = useState(16)
-  const [useUpper, setUseUpper] = useState(true)
-  const [useLower, setUseLower] = useState(true)
-  const [useNumbers, setUseNumbers] = useState(true)
-  const [useSymbols, setUseSymbols] = useState(false)
-  const [password, setPassword] = useState("")
-  const [copied, setCopied] = useState(false)
-
-  const generate = useCallback(() => {
-    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    const lower = "abcdefghijklmnopqrstuvwxyz"
-    const numbers = "0123456789"
-    const symbols = "!@#$%^&*()-_=+[]{};:,.?"
-
-    let chars = ""
-    if (useUpper) chars += upper
-    if (useLower) chars += lower
-    if (useNumbers) chars += numbers
-    if (useSymbols) chars += symbols
-    if (!chars) return
-
-    const values = new Uint32Array(length)
-    crypto.getRandomValues(values)
-    const nextPassword = Array.from(values, (value) => chars[value % chars.length]).join("")
-    setPassword(nextPassword)
-    setCopied(false)
-  }, [length, useLower, useNumbers, useSymbols, useUpper])
-
-  useEffect(() => {
-    generate()
-  }, [generate])
-
-  const handleCopy = async () => {
-    if (!password) return
-    await navigator.clipboard.writeText(password)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
-  }
-
-  return (
-    <div className="grid gap-4">
-      <div className={cardClass}>
-        <p className="break-all rounded-md border border-border bg-muted/40 p-3 font-mono text-sm">
-          {password || "Selecione opções para gerar"}
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button onClick={generate}>Gerar</Button>
-          <Button variant="outline" onClick={handleCopy} disabled={!password}>
-            {copied ? "Copiado" : "Copiar"}
-          </Button>
-        </div>
-      </div>
-
-      <div className={cardClass}>
-        <label className="grid gap-2 text-sm">
-          Tamanho: {length}
-          <input
-            type="range"
-            min={8}
-            max={64}
-            value={length}
-            onChange={(event) => setLength(Number(event.target.value))}
-          />
-        </label>
-        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-          <label><input type="checkbox" checked={useUpper} onChange={() => setUseUpper((prev) => !prev)} /> Maiúsculas</label>
-          <label><input type="checkbox" checked={useLower} onChange={() => setUseLower((prev) => !prev)} /> Minúsculas</label>
-          <label><input type="checkbox" checked={useNumbers} onChange={() => setUseNumbers((prev) => !prev)} /> Números</label>
-          <label><input type="checkbox" checked={useSymbols} onChange={() => setUseSymbols((prev) => !prev)} /> Símbolos</label>
-        </div>
-      </div>
-    </div>
-  )
+  return <FullPasswordGeneratorTool />
 }
 
 function hexToHsl(hex: string) {
@@ -420,81 +278,7 @@ function QrGeneratorTool() {
 }
 
 function ImageConverterTool() {
-  const [file, setFile] = useState<File | null>(null)
-  const [targetFormat, setTargetFormat] = useState("image/png")
-  const [quality, setQuality] = useState(0.9)
-  const [preview, setPreview] = useState<string>("")
-  const [converting, setConverting] = useState(false)
-  const [error, setError] = useState("")
-
-  useEffect(() => {
-    if (!file) {
-      setPreview("")
-      return
-    }
-    const url = URL.createObjectURL(file)
-    setPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [file])
-
-  const handleConvert = async () => {
-    if (!file) return
-    setConverting(true)
-    setError("")
-
-    try {
-      const output = await convertImageBlob(file, targetFormat, quality)
-      const ext = targetFormat.split("/")[1]
-      downloadBlob(output, `converted.${ext}`)
-    } catch (caughtError) {
-      const message =
-        caughtError instanceof Error ? caughtError.message : "Falha ao converter"
-      setError(message)
-    } finally {
-      setConverting(false)
-    }
-  }
-
-  return (
-    <div className="grid gap-4">
-      <div className={cardClass}>
-        <input
-          type="file"
-          accept="image/*"
-          className={fieldClass}
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-        />
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm">
-            Formato
-            <select className={fieldClass} value={targetFormat} onChange={(event) => setTargetFormat(event.target.value)}>
-              <option value="image/png">PNG</option>
-              <option value="image/jpeg">JPEG</option>
-              <option value="image/webp">WebP</option>
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm">
-            Qualidade: {Math.round(quality * 100)}%
-            <input type="range" min={0.1} max={1} step={0.05} value={quality} onChange={(event) => setQuality(Number(event.target.value))} />
-          </label>
-        </div>
-      </div>
-
-      {preview && (
-        <div className={cardClass}>
-          <img src={preview} alt="Prévia" className="max-h-72 w-full rounded-md object-contain" />
-        </div>
-      )}
-
-      <div>
-        <Button onClick={handleConvert} disabled={!file || converting}>
-          {converting ? "Convertendo..." : "Converter e baixar"}
-        </Button>
-      </div>
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-    </div>
-  )
+  return <FullImageConverterTool />
 }
 
 function BgRemoverTool() {
@@ -577,105 +361,7 @@ function BgRemoverTool() {
 }
 
 function ImageCompressorTool() {
-  const [file, setFile] = useState<File | null>(null)
-  const [quality, setQuality] = useState(0.75)
-  const [maxWidth, setMaxWidth] = useState(1600)
-  const [result, setResult] = useState<Blob | null>(null)
-  const [working, setWorking] = useState(false)
-  const [error, setError] = useState("")
-
-  const before = file?.size ?? 0
-  const after = result?.size ?? 0
-
-  const compress = async () => {
-    if (!file) return
-    setWorking(true)
-    setError("")
-
-    try {
-      const bitmap = await loadBitmap(file)
-      const width = "width" in bitmap ? bitmap.width : 0
-      const height = "height" in bitmap ? bitmap.height : 0
-      const ratio = Math.min(1, maxWidth / width)
-
-      const canvas = document.createElement("canvas")
-      canvas.width = Math.max(1, Math.floor(width * ratio))
-      canvas.height = Math.max(1, Math.floor(height * ratio))
-
-      const context = canvas.getContext("2d")
-      if (!context) throw new Error("Canvas não suportado")
-
-      context.fillStyle = "#ffffff"
-      context.fillRect(0, 0, canvas.width, canvas.height)
-      context.imageSmoothingEnabled = true
-      context.imageSmoothingQuality = "high"
-      context.drawImage(bitmap as CanvasImageSource, 0, 0, canvas.width, canvas.height)
-
-      const compressedBlob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              reject(new Error("Falha ao comprimir"))
-              return
-            }
-            resolve(blob)
-          },
-          "image/jpeg",
-          quality
-        )
-      })
-
-      setResult(compressedBlob)
-    } catch (caughtError) {
-      const message =
-        caughtError instanceof Error ? caughtError.message : "Erro de compressão"
-      setError(message)
-    } finally {
-      setWorking(false)
-    }
-  }
-
-  return (
-    <div className="grid gap-4">
-      <div className={cardClass}>
-        <input type="file" accept="image/*" className={fieldClass} onChange={(event) => {
-          setFile(event.target.files?.[0] ?? null)
-          setResult(null)
-        }} />
-
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm">
-            Qualidade JPEG: {Math.round(quality * 100)}%
-            <input type="range" min={0.2} max={1} step={0.05} value={quality} onChange={(event) => setQuality(Number(event.target.value))} />
-          </label>
-          <label className="grid gap-2 text-sm">
-            Largura máxima: {maxWidth}px
-            <input type="range" min={600} max={3200} step={100} value={maxWidth} onChange={(event) => setMaxWidth(Number(event.target.value))} />
-          </label>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <Button onClick={compress} disabled={!file || working}>{working ? "Comprimindo..." : "Comprimir"}</Button>
-        <Button
-          variant="outline"
-          disabled={!result}
-          onClick={() => result && downloadBlob(result, "compressed.jpg")}
-        >
-          Baixar
-        </Button>
-      </div>
-
-      {(before > 0 || after > 0) && (
-        <div className={cardClass}>
-          <p className="text-sm">Original: {formatBytes(before)}</p>
-          <p className="text-sm">Comprimida: {formatBytes(after)}</p>
-        </div>
-      )}
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-    </div>
-  )
+  return <FullImageCompressorTool />
 }
 
 function TextToPdfTool() {
