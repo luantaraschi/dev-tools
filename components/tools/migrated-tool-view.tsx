@@ -2,9 +2,10 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { jsPDF } from "jspdf"
 import QRCode from "qrcode"
 import { Button } from "@/components/ui/button"
+import { FullTimeConverterTool } from "@/components/tools/time-converter-full"
+import { FullTextToPdfTool } from "@/components/tools/text-to-pdf-full"
 
 type MigratedToolViewProps = {
   slug: string
@@ -36,144 +37,69 @@ function formatBytes(bytes: number) {
   return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unit]}`
 }
 
-function TimeConverterTool() {
-  const timezones = [
-    "UTC",
-    "America/Sao_Paulo",
-    "America/New_York",
-    "Europe/London",
-    "Europe/Berlin",
-    "Asia/Tokyo",
-    "Asia/Seoul",
-    "Asia/Dubai",
-    "Australia/Sydney",
-  ]
-
-  const nowLocal = new Date()
-  const defaultInput = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, "0")}-${String(nowLocal.getDate()).padStart(2, "0")}T${String(nowLocal.getHours()).padStart(2, "0")}:${String(nowLocal.getMinutes()).padStart(2, "0")}`
-
-  const [sourceTimeZone, setSourceTimeZone] = useState("America/Sao_Paulo")
-  const [targetTimeZone, setTargetTimeZone] = useState("UTC")
-  const [dateTimeInput, setDateTimeInput] = useState(defaultInput)
-
-  const convertToUtc = (dateTime: string, timeZone: string) => {
-    const [datePart, timePart] = dateTime.split("T")
-    if (!datePart || !timePart) return new Date()
-
-    const [year, month, day] = datePart.split("-").map(Number)
-    const [hour, minute] = timePart.split(":").map(Number)
-
-    const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute))
-    const formatter = new Intl.DateTimeFormat("en-US", {
-      timeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    })
-
-    const parts = formatter.formatToParts(utcGuess)
-    const map = Object.fromEntries(
-      parts
-        .filter((part) => part.type !== "literal")
-        .map((part) => [part.type, Number(part.value)])
-    )
-
-    const asUtc = Date.UTC(
-      map.year,
-      (map.month ?? 1) - 1,
-      map.day,
-      map.hour,
-      map.minute
-    )
-
-    const offset = asUtc - utcGuess.getTime()
-    return new Date(utcGuess.getTime() - offset)
+async function loadBitmap(source: Blob) {
+  if ("createImageBitmap" in window) {
+    return createImageBitmap(source)
   }
 
-  const sourceUtcDate = useMemo(
-    () => convertToUtc(dateTimeInput, sourceTimeZone),
-    [dateTimeInput, sourceTimeZone]
-  )
+  const url = URL.createObjectURL(source)
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new Image()
+      element.onload = () => resolve(element)
+      element.onerror = () => reject(new Error("Falha ao carregar imagem"))
+      element.src = url
+    })
+    return image
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
 
-  const sourceFormatted = useMemo(
-    () =>
-      new Intl.DateTimeFormat("pt-BR", {
-        dateStyle: "full",
-        timeStyle: "short",
-        timeZone: sourceTimeZone,
-      }).format(sourceUtcDate),
-    [sourceUtcDate, sourceTimeZone]
-  )
+async function convertImageBlob(input: Blob, format: string, quality: number) {
+  const bitmap = await loadBitmap(input)
+  const width = "width" in bitmap ? bitmap.width : 0
+  const height = "height" in bitmap ? bitmap.height : 0
 
-  const targetFormatted = useMemo(
-    () =>
-      new Intl.DateTimeFormat("pt-BR", {
-        dateStyle: "full",
-        timeStyle: "short",
-        timeZone: targetTimeZone,
-      }).format(sourceUtcDate),
-    [sourceUtcDate, targetTimeZone]
-  )
+  const canvas = document.createElement("canvas")
+  canvas.width = width
+  canvas.height = height
 
-  return (
-    <div className="grid gap-4">
-      <div className={cardClass}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm">
-            Data e hora
-            <input
-              className={fieldClass}
-              type="datetime-local"
-              value={dateTimeInput}
-              onChange={(event) => setDateTimeInput(event.target.value)}
-            />
-          </label>
-          <label className="grid gap-2 text-sm">
-            Fuso de origem
-            <select
-              className={fieldClass}
-              value={sourceTimeZone}
-              onChange={(event) => setSourceTimeZone(event.target.value)}
-            >
-              {timezones.map((timezone) => (
-                <option key={timezone} value={timezone}>
-                  {timezone}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm sm:col-span-2">
-            Fuso de destino
-            <select
-              className={fieldClass}
-              value={targetTimeZone}
-              onChange={(event) => setTargetTimeZone(event.target.value)}
-            >
-              {timezones.map((timezone) => (
-                <option key={timezone} value={timezone}>
-                  {timezone}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </div>
+  const context = canvas.getContext("2d", { alpha: true })
+  if (!context) {
+    throw new Error("Canvas não suportado no navegador")
+  }
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className={cardClass}>
-          <p className="text-xs text-muted-foreground">Origem</p>
-          <p className="mt-1 text-sm font-medium">{sourceFormatted}</p>
-        </div>
-        <div className={cardClass}>
-          <p className="text-xs text-muted-foreground">Destino</p>
-          <p className="mt-1 text-sm font-medium">{targetFormatted}</p>
-        </div>
-      </div>
-    </div>
-  )
+  if (format === "image/jpeg") {
+    context.fillStyle = "#ffffff"
+    context.fillRect(0, 0, canvas.width, canvas.height)
+  } else {
+    context.clearRect(0, 0, canvas.width, canvas.height)
+  }
+
+  context.imageSmoothingEnabled = true
+  context.imageSmoothingQuality = "high"
+  context.drawImage(bitmap as CanvasImageSource, 0, 0, canvas.width, canvas.height)
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (result) => {
+        if (!result) {
+          reject(new Error("Falha ao converter imagem"))
+          return
+        }
+        resolve(result)
+      },
+      format,
+      format === "image/png" ? undefined : quality
+    )
+  })
+
+  return blob
+}
+
+function TimeConverterTool() {
+  return <FullTimeConverterTool />
 }
 
 function PasswordGeneratorTool() {
@@ -498,38 +424,35 @@ function ImageConverterTool() {
   const [targetFormat, setTargetFormat] = useState("image/png")
   const [quality, setQuality] = useState(0.9)
   const [preview, setPreview] = useState<string>("")
+  const [converting, setConverting] = useState(false)
+  const [error, setError] = useState("")
 
   useEffect(() => {
     if (!file) {
       setPreview("")
       return
     }
-    setPreview(URL.createObjectURL(file))
+    const url = URL.createObjectURL(file)
+    setPreview(url)
+    return () => URL.revokeObjectURL(url)
   }, [file])
 
-  const handleConvert = () => {
+  const handleConvert = async () => {
     if (!file) return
+    setConverting(true)
+    setError("")
 
-    const image = new Image()
-    image.onload = () => {
-      const canvas = document.createElement("canvas")
-      canvas.width = image.width
-      canvas.height = image.height
-      const context = canvas.getContext("2d")
-      if (!context) return
-      context.drawImage(image, 0, 0)
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return
-          const ext = targetFormat.split("/")[1]
-          downloadBlob(blob, `converted.${ext}`)
-        },
-        targetFormat,
-        quality
-      )
+    try {
+      const output = await convertImageBlob(file, targetFormat, quality)
+      const ext = targetFormat.split("/")[1]
+      downloadBlob(output, `converted.${ext}`)
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof Error ? caughtError.message : "Falha ao converter"
+      setError(message)
+    } finally {
+      setConverting(false)
     }
-    image.src = URL.createObjectURL(file)
   }
 
   return (
@@ -564,10 +487,12 @@ function ImageConverterTool() {
       )}
 
       <div>
-        <Button onClick={handleConvert} disabled={!file}>
-          Converter e baixar
+        <Button onClick={handleConvert} disabled={!file || converting}>
+          {converting ? "Convertendo..." : "Converter e baixar"}
         </Button>
       </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )
 }
@@ -656,31 +581,58 @@ function ImageCompressorTool() {
   const [quality, setQuality] = useState(0.75)
   const [maxWidth, setMaxWidth] = useState(1600)
   const [result, setResult] = useState<Blob | null>(null)
+  const [working, setWorking] = useState(false)
+  const [error, setError] = useState("")
 
   const before = file?.size ?? 0
   const after = result?.size ?? 0
 
-  const compress = () => {
+  const compress = async () => {
     if (!file) return
-    const image = new Image()
-    image.onload = () => {
-      const ratio = Math.min(1, maxWidth / image.width)
+    setWorking(true)
+    setError("")
+
+    try {
+      const bitmap = await loadBitmap(file)
+      const width = "width" in bitmap ? bitmap.width : 0
+      const height = "height" in bitmap ? bitmap.height : 0
+      const ratio = Math.min(1, maxWidth / width)
+
       const canvas = document.createElement("canvas")
-      canvas.width = Math.max(1, Math.floor(image.width * ratio))
-      canvas.height = Math.max(1, Math.floor(image.height * ratio))
+      canvas.width = Math.max(1, Math.floor(width * ratio))
+      canvas.height = Math.max(1, Math.floor(height * ratio))
+
       const context = canvas.getContext("2d")
-      if (!context) return
-      context.drawImage(image, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return
-          setResult(blob)
-        },
-        "image/jpeg",
-        quality
-      )
+      if (!context) throw new Error("Canvas não suportado")
+
+      context.fillStyle = "#ffffff"
+      context.fillRect(0, 0, canvas.width, canvas.height)
+      context.imageSmoothingEnabled = true
+      context.imageSmoothingQuality = "high"
+      context.drawImage(bitmap as CanvasImageSource, 0, 0, canvas.width, canvas.height)
+
+      const compressedBlob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error("Falha ao comprimir"))
+              return
+            }
+            resolve(blob)
+          },
+          "image/jpeg",
+          quality
+        )
+      })
+
+      setResult(compressedBlob)
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof Error ? caughtError.message : "Erro de compressão"
+      setError(message)
+    } finally {
+      setWorking(false)
     }
-    image.src = URL.createObjectURL(file)
   }
 
   return (
@@ -704,7 +656,7 @@ function ImageCompressorTool() {
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={compress} disabled={!file}>Comprimir</Button>
+        <Button onClick={compress} disabled={!file || working}>{working ? "Comprimindo..." : "Comprimir"}</Button>
         <Button
           variant="outline"
           disabled={!result}
@@ -720,53 +672,14 @@ function ImageCompressorTool() {
           <p className="text-sm">Comprimida: {formatBytes(after)}</p>
         </div>
       )}
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )
 }
 
 function TextToPdfTool() {
-  const [text, setText] = useState("")
-
-  const generatePdf = () => {
-    const document = new jsPDF({ unit: "pt", format: "a4" })
-    const margin = 40
-    const width = document.internal.pageSize.getWidth() - margin * 2
-
-    const lines = document.splitTextToSize(text || " ", width)
-    let y = margin
-
-    lines.forEach((line: string) => {
-      if (y > document.internal.pageSize.getHeight() - margin) {
-        document.addPage()
-        y = margin
-      }
-      document.text(line, margin, y)
-      y += 16
-    })
-
-    document.save("text-to-pdf.pdf")
-  }
-
-  return (
-    <div className="grid gap-4">
-      <div className={cardClass}>
-        <label className="grid gap-2 text-sm">
-          Conteúdo
-          <textarea
-            className={`${fieldClass} min-h-60`}
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            placeholder="Escreva ou cole seu conteúdo aqui..."
-          />
-        </label>
-      </div>
-      <div>
-        <Button onClick={generatePdf} disabled={!text.trim()}>
-          Gerar PDF
-        </Button>
-      </div>
-    </div>
-  )
+  return <FullTextToPdfTool />
 }
 
 function JsonFormatterTool() {
