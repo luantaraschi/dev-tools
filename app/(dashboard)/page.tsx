@@ -10,9 +10,12 @@ import {
   QrCode,
   Scissors,
   Wrench,
+  Dices,
+  Percent,
 } from "lucide-react"
 import { type ReactNode } from "react"
 import { ToolCard } from "@/components/tool-card"
+import { BubbleText } from "@/components/ui/bubble-text"
 import { tools } from "@/lib/tools"
 
 const toolIcons: Record<string, ReactNode> = {
@@ -31,6 +34,8 @@ const toolIcons: Record<string, ReactNode> = {
   "box-shadow-glassmorphism": <Minimize2 />,
   "mesh-gradient-generator": <Palette />,
   "image-ocr": <ImageIcon />,
+  "random-drawer": <Dices />,
+  "percentage-calculator": <Percent />,
 }
 
 export default function DashboardPage() {
@@ -45,9 +50,14 @@ export default function DashboardPage() {
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
           Welcome to{" "}
-          <span className="bg-linear-to-r from-[#0f172a] via-[#1d4ed8] to-[#0f766e] bg-clip-text text-transparent dark:from-[#f8fafc] dark:via-[#93c5fd] dark:to-[#5eead4]">
-            Dev Tools
-          </span>
+          <BubbleText
+            text="Dev Tools"
+            className="gradient-text-clean align-baseline"
+            charClassName="leading-[1.1]"
+            activeClassName="font-black text-transparent"
+            neighborClassName="font-semibold text-transparent"
+            secondNeighborClassName="font-medium text-transparent"
+          />
         </h1>
         <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
           A curated collection of{" "}
@@ -73,22 +83,31 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div>
-        <h2 className="mb-6 text-xl font-semibold tracking-tight text-foreground">
-          All Tools
-        </h2>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {tools.map((tool) => (
-            <ToolCard
-              key={tool.href}
-              href={tool.href}
-              title={tool.title}
-              description={tool.description}
-              icon={toolIcons[tool.slug] ?? <Wrench />}
-            />
-          ))}
-        </div>
+      <div className="flex flex-col gap-12">
+        {(["Formatters & Text", "Images & Colors", "Generators & Utilities", "CSS & Design", "Calculators & Math"] as const).map((category) => {
+          const categoryTools = tools.filter(t => t.category === category)
+          if (categoryTools.length === 0) return null
+          
+          return (
+            <div key={category}>
+              <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground/80 border-b border-border pb-2">
+                {category}
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {categoryTools.map((tool) => (
+                  <ToolCard
+                    key={tool.href}
+                    href={tool.href}
+                    title={tool.title}
+                    description={tool.description}
+                    icon={toolIcons[tool.slug] ?? <Wrench />}
+                    status={tool.status}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

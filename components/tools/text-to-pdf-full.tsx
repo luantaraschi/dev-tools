@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { GlowingEffect } from "@/components/ui/glowing-effect"
 import {
   downloadPdf,
   generatePdf,
@@ -109,7 +110,7 @@ export function FullTextToPdfTool() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4">
         <h3 className="text-base font-semibold">Settings</h3>
 
         <div className="mt-3 grid gap-3">
@@ -160,10 +161,17 @@ export function FullTextToPdfTool() {
                 <button
                   key={theme}
                   type="button"
-                  className={`rounded-md border px-2 py-2 text-xs capitalize ${settings.theme === theme ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground"}`}
+                  className={`relative overflow-hidden rounded-md border px-2 py-2 text-xs capitalize ${settings.theme === theme ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground"}`}
                   onClick={() => setSetting("theme", theme)}
                 >
-                  {theme}
+                  <GlowingEffect
+                    spread={24}
+                    disabled={false}
+                    proximity={48}
+                    inactiveZone={0.2}
+                    borderWidth={2}
+                  />
+                  <span className="relative z-10">{theme}</span>
                 </button>
               ))}
             </div>
@@ -181,17 +189,36 @@ export function FullTextToPdfTool() {
           </div>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={generatePreview} disabled={!text.trim() || isGenerating}>
-              {isGenerating ? "Generating..." : "Preview"}
+            <Button
+              variant="outline"
+              className="relative overflow-hidden"
+              onClick={generatePreview}
+              disabled={!text.trim() || isGenerating}
+            >
+              <GlowingEffect
+                spread={24}
+                disabled={false}
+                proximity={56}
+                inactiveZone={0.15}
+                borderWidth={2}
+              />
+              <span className="relative z-10">{isGenerating ? "Generating..." : "Preview"}</span>
             </Button>
-            <Button onClick={handleDownload} disabled={!text.trim()}>
-              Download PDF
+            <Button className="relative overflow-hidden" onClick={handleDownload} disabled={!text.trim()}>
+              <GlowingEffect
+                spread={24}
+                disabled={false}
+                proximity={56}
+                inactiveZone={0.15}
+                borderWidth={2}
+              />
+              <span className="relative z-10">Download PDF</span>
             </Button>
           </div>
         </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-card">
+      <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
             <p className="font-medium">Editor</p>
@@ -199,7 +226,20 @@ export function FullTextToPdfTool() {
             <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">{stats.words} words</span>
             <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">{stats.lines} lines</span>
           </div>
-          <button type="button" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setText(PLACEHOLDER_TEXT)}>Example</button>
+          <button
+            type="button"
+            className="relative overflow-hidden rounded-md px-2 py-1 text-sm text-muted-foreground hover:text-foreground"
+            onClick={() => setText(PLACEHOLDER_TEXT)}
+          >
+            <GlowingEffect
+              spread={24}
+              disabled={false}
+              proximity={48}
+              inactiveZone={0.2}
+              borderWidth={2}
+            />
+            <span className="relative z-10">Example</span>
+          </button>
         </div>
 
         <div
@@ -236,22 +276,42 @@ export function FullTextToPdfTool() {
             Upload .txt or .md
             <input type="file" hidden accept=".txt,.md,text/plain,text/markdown" onChange={(event) => handleFile(event.target.files?.[0] ?? undefined)} />
           </label>
-          <Button variant="ghost" onClick={() => {
-            setText("")
-            setPreviewUrl(null)
-            setFilename("document")
-          }}>
-            Clear
+          <Button
+            variant="ghost"
+            className="relative overflow-hidden"
+            onClick={() => {
+              setText("")
+              setPreviewUrl(null)
+              setFilename("document")
+            }}
+          >
+            <GlowingEffect
+              spread={24}
+              disabled={false}
+              proximity={56}
+              inactiveZone={0.15}
+              borderWidth={2}
+            />
+            <span className="relative z-10">Clear</span>
           </Button>
         </div>
       </section>
 
       {showPreview && previewUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowPreview(false)}>
-          <div className="h-[90vh] w-full max-w-5xl rounded-xl border border-border bg-card p-3" onClick={(event) => event.stopPropagation()}>
+          <div className="h-[90vh] w-full max-w-5xl rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-3" onClick={(event) => event.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-medium">Preview — {settings.pageSize.toUpperCase()} {settings.orientation}</p>
-              <Button variant="outline" onClick={() => setShowPreview(false)}>Close</Button>
+              <Button variant="outline" className="relative overflow-hidden" onClick={() => setShowPreview(false)}>
+                <GlowingEffect
+                  spread={24}
+                  disabled={false}
+                  proximity={56}
+                  inactiveZone={0.15}
+                  borderWidth={2}
+                />
+                <span className="relative z-10">Close</span>
+              </Button>
             </div>
             <iframe src={previewUrl} title="PDF preview" className="h-[calc(90vh-80px)] w-full rounded-md border border-border bg-background" />
           </div>

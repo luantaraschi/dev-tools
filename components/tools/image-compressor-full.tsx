@@ -182,7 +182,7 @@ export function FullImageCompressorTool() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4">
         <h2 className="text-lg font-semibold">Image Compressor</h2>
         <p className="text-sm text-muted-foreground">Fast, ad-free image compression.</p>
 
@@ -308,7 +308,7 @@ export function FullImageCompressorTool() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4">
         <h3 className="font-medium">Preview</h3>
         <div className="mt-3 flex min-h-[420px] items-center justify-center rounded-lg border border-border bg-background p-3">
           {result?.url ? (

@@ -17,9 +17,12 @@ import {
   QrCode,
   Scissors,
   Wrench,
+  Dices,
+  Percent,
 } from "lucide-react"
 
 import { ThemeSelector } from "@/components/theme-selector"
+import { BubbleText } from "@/components/ui/bubble-text"
 import {
   Sidebar,
   SidebarContent,
@@ -51,6 +54,8 @@ const toolIcons: Record<string, LucideIcon> = {
   "box-shadow-glassmorphism": Minimize2,
   "mesh-gradient-generator": Palette,
   "image-ocr": ImageIcon,
+  "random-drawer": Dices,
+  "percentage-calculator": Percent,
 }
 
 export function AppSidebar() {
@@ -72,7 +77,14 @@ export function AppSidebar() {
                   <Wrench className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Dev Tools</span>
+                  <BubbleText
+                    text="Dev Tools"
+                    className="w-fit text-sm font-semibold text-sidebar-foreground"
+                    charClassName="leading-none"
+                    activeClassName="font-bold text-sidebar-foreground"
+                    neighborClassName="font-semibold text-sidebar-foreground/90"
+                    secondNeighborClassName="text-sidebar-foreground/80"
+                  />
                   <span className="truncate text-xs text-muted-foreground">
                     by Luan Taraschi
                   </span>
@@ -119,31 +131,38 @@ export function AppSidebar() {
 
         <SidebarSeparator />
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Tools</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {tools.map((tool) => {
-                const Icon = toolIcons[tool.slug] ?? Wrench
+        {(["Formatters & Text", "Images & Colors", "Generators & Utilities", "CSS & Design", "Calculators & Math"] as const).map((category) => {
+          const categoryTools = tools.filter(t => t.category === category)
+          if (categoryTools.length === 0) return null
 
-                return (
-                  <SidebarMenuItem key={tool.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname === tool.href}
-                      tooltip={tool.title}
-                    >
-                      <Link href={tool.href}>
-                        <Icon />
-                        <span>{tool.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          return (
+            <SidebarGroup key={category}>
+              <SidebarGroupLabel>{category}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {categoryTools.map((tool) => {
+                    const Icon = toolIcons[tool.slug] ?? Wrench
+
+                    return (
+                      <SidebarMenuItem key={tool.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === tool.href}
+                          tooltip={tool.title}
+                        >
+                          <Link href={tool.href}>
+                            <Icon />
+                            <span>{tool.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )
+        })}
       </SidebarContent>
 
       <SidebarSeparator />

@@ -147,7 +147,7 @@ export function FullTimeConverterTool() {
 
   if (!moduleApi || !sourceKey) {
     return (
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4">
         <p className="text-sm text-muted-foreground">Loading time converter...</p>
       </div>
     )
@@ -274,7 +274,7 @@ export function FullTimeConverterTool() {
 
   return (
     <div className="grid gap-4">
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4">
         <h2 className="text-lg font-semibold">Time Zone Converter</h2>
         <p className="text-sm text-muted-foreground">
           Convert times across regions instantly
@@ -583,7 +583,7 @@ export function FullTimeConverterTool() {
           onClick={() => setShowMeetingModal(false)}
         >
           <div
-            className="w-full max-w-lg rounded-xl border border-border bg-card p-4"
+            className="w-full max-w-lg rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4"
             onClick={(event) => event.stopPropagation()}
           >
             <h3 className="text-lg font-semibold">Schedule Meeting</h3>

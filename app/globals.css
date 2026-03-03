@@ -27,6 +27,7 @@
     --color-border: hsl(var(--border));
     --color-input: hsl(var(--input));
     --color-ring: hsl(var(--ring));
+    --color-sidebar: hsl(var(--sidebar-background));
     --color-sidebar-background: hsl(var(--sidebar-background));
     --color-sidebar-foreground: hsl(var(--sidebar-foreground));
     --color-sidebar-primary: hsl(var(--sidebar-primary));
@@ -212,5 +213,54 @@
   input[type="range"]:disabled {
     cursor: not-allowed;
     opacity: 0.55;
+  }
+}
+
+@layer utilities {
+  @keyframes gradient-pan {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .gradient-text-clean {
+    background-image: linear-gradient(
+      110deg,
+      #0f172a 0%,
+      #1d4ed8 35%,
+      #0f766e 65%,
+      #1d4ed8 85%,
+      #0f172a 100%
+    );
+    background-size: 220% 220%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: gradient-pan 14s ease-in-out infinite;
+    will-change: background-position;
+  }
+
+  .dark .gradient-text-clean {
+    background-image: linear-gradient(
+      110deg,
+      #f8fafc 0%,
+      #93c5fd 35%,
+      #5eead4 65%,
+      #93c5fd 85%,
+      #f8fafc 100%
+    );
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gradient-text-clean {
+      animation: none;
+      background-position: 50% 50%;
+    }
   }
 }

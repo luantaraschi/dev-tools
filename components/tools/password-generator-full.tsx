@@ -95,7 +95,7 @@ export function FullPasswordGeneratorTool() {
 
   return (
     <div className="grid gap-4">
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4">
         <h2 className="text-lg font-semibold">Password Generator</h2>
         <p className="text-sm text-muted-foreground">Generate secure, random passwords</p>
 
@@ -210,7 +210,7 @@ export function FullPasswordGeneratorTool() {
       </section>
 
       {history.length > 0 && (
-        <section className="rounded-xl border border-border bg-card p-4">
+        <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4">
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-sm font-medium">Recent</h3>
             <button type="button" className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setHistory([])}>

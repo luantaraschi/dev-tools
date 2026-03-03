@@ -111,7 +111,7 @@ export function FullImageConverterTool() {
   return (
     <div className="grid gap-4">
       <section
-        className="rounded-xl border border-border bg-card p-4"
+        className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4"
         onDragOver={(event) => event.preventDefault()}
         onDrop={onDrop}
       >

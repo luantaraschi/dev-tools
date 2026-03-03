@@ -10,7 +10,8 @@ import { FullImageConverterTool } from "@/components/tools/image-converter-full"
 import { FullImageCompressorTool } from "@/components/tools/image-compressor-full"
 import { FullTimeConverterTool } from "@/components/tools/time-converter-full"
 import { FullTextToPdfTool } from "@/components/tools/text-to-pdf-full"
-
+import { FullPercentageCalculatorTool } from "@/components/tools/percentage-calculator-full"
+import { FullRandomDrawerTool } from "@/components/tools/random-drawer-full"
 type MigratedToolViewProps = {
   slug: string
 }
@@ -18,7 +19,7 @@ type MigratedToolViewProps = {
 const fieldClass =
   "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
 
-const cardClass = "rounded-xl border border-border bg-card p-4"
+const cardClass = "rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4"
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
@@ -247,7 +248,7 @@ function ColorPaletteExtractorTool() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4">
         <h2 className="text-lg font-semibold">Color Palette Extractor</h2>
         <p className="text-sm text-muted-foreground">Extract beautiful color palettes from any image.</p>
 
@@ -308,7 +309,7 @@ function ColorPaletteExtractorTool() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-2xl p-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Palette</h3>
           <Button variant="ghost" size="sm" onClick={() => {
@@ -333,7 +334,7 @@ function ColorPaletteExtractorTool() {
                     key={color}
                     type="button"
                     onClick={() => navigator.clipboard.writeText(toDisplayColor(color))}
-                    className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-left hover:bg-accent"
+                    className="flex items-center gap-3 rounded-md border border-border/60 bg-card/60 backdrop-blur-2xl px-3 py-2 text-left hover:bg-accent"
                   >
                     <span className="h-8 w-8 shrink-0 rounded border border-border" style={{ backgroundColor: color }} />
                     <span className="font-mono text-sm">{toDisplayColor(color)}</span>
@@ -909,6 +910,8 @@ export function MigratedToolView({ slug }: MigratedToolViewProps) {
   if (slug === "mesh-gradient-generator") return <MeshGradientGeneratorTool />
   if (slug === "image-ocr") return <ImageOcrTool />
 
+  if (slug === "random-drawer") return <FullRandomDrawerTool />
+  if (slug === "percentage-calculator") return <FullPercentageCalculatorTool />
   return (
     <div className={cardClass}>
       <p className="text-sm text-muted-foreground">Ferramenta não encontrada.</p>

@@ -23,7 +23,7 @@ export default function ToolPage() {
           Back to dashboard
         </Link>
 
-        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <section className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-2xl p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-3">
             <div className="rounded-xl bg-primary/10 p-3 text-primary ring-1 ring-primary/20">
               <Wrench className="size-5" />
@@ -52,7 +52,7 @@ export default function ToolPage() {
         Back to dashboard
       </Link>
 
-      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <section className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-2xl p-6 shadow-sm">
         <div className="mb-4 flex items-center gap-3">
           <div className="rounded-xl bg-primary/10 p-3 text-primary ring-1 ring-primary/20">
             <Wrench className="size-5" />

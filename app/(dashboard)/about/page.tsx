@@ -58,7 +58,7 @@ const contributors = [
 export default function AboutPage() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
-      <section className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm sm:p-8">
+      <section className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-2xl p-6 text-center shadow-sm sm:p-8">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           Project Information
         </p>
@@ -72,7 +72,7 @@ export default function AboutPage() {
         </p>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-border/60 bg-card/60 backdrop-blur-2xl shadow-sm">
         <header className="flex items-center gap-3 border-b border-border px-5 py-4">
           <div className="rounded-lg bg-primary/10 p-2 text-primary ring-1 ring-primary/20 dark:ring-primary/30">
             <FlaskConical className="size-4" />
@@ -95,7 +95,7 @@ export default function AboutPage() {
         </dl>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+      <section className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-2xl p-5 shadow-sm sm:p-6">
         <div className="mb-4 flex items-center gap-2">
           <div className="h-1 w-8 rounded-full bg-primary" />
           <h2 className="text-xl font-semibold tracking-tight text-card-foreground">
@@ -120,7 +120,7 @@ export default function AboutPage() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={person.label}
-                  className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-card text-primary transition-colors hover:bg-accent hover:text-accent-foreground"
+                  className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-card/60 backdrop-blur-2xl text-primary transition-colors hover:bg-accent hover:text-accent-foreground"
                 >
                   <Icon className="size-4" />
                 </a>

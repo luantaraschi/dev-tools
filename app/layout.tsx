@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { TheInfiniteGrid } from "@/components/ui/the-infinite-grid"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -17,8 +18,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider>{children}</ThemeProvider>
+      <body className={`${inter.className} relative min-h-svh`}>
+        <ThemeProvider>
+          <TheInfiniteGrid className="z-0" />
+          <div className="relative z-10">{children}</div>
+        </ThemeProvider>
       </body>
     </html>
   )
