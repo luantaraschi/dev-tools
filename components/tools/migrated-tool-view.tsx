@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react"
 import QRCode from "qrcode"
 import { Button } from "@/components/ui/button"
+import { Slider } from "@/components/ui/slider"
 import { FullPasswordGeneratorTool } from "@/components/tools/password-generator-full"
 import { FullImageConverterTool } from "@/components/tools/image-converter-full"
 import { FullImageCompressorTool } from "@/components/tools/image-compressor-full"
@@ -541,6 +542,356 @@ function JsonFormatterTool() {
   )
 }
 
+function splitWords(value: string) {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[\W_]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+}
+
+function CaseConverterTool() {
+  const [text, setText] = useState("hello world from dev tools")
+
+  const words = useMemo(() => splitWords(text), [text])
+
+  const lowerWords = words.map((word) => word.toLowerCase())
+  const titleWords = lowerWords.map(
+    (word) => word.charAt(0).toUpperCase() + word.slice(1)
+  )
+
+  const outputs = {
+    camelCase:
+      lowerWords.length === 0
+        ? ""
+        : lowerWords[0] + titleWords.slice(1).join(""),
+    snake_case: lowerWords.join("_"),
+    PascalCase: titleWords.join(""),
+    "kebab-case": lowerWords.join("-"),
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <section className={cardClass}>
+        <label className="grid gap-2 text-sm">
+          Input text
+          <textarea
+            className={`${fieldClass} min-h-52`}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder="Type or paste any text here"
+          />
+        </label>
+      </section>
+
+      <section className={cardClass}>
+        <h3 className="font-medium">Converted cases</h3>
+        <div className="mt-3 grid gap-2">
+          {Object.entries(outputs).map(([label, value]) => (
+            <div key={label} className="rounded-md border border-border bg-background p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigator.clipboard.writeText(value)}
+                >
+                  Copy
+                </Button>
+              </div>
+              <p className="font-mono text-sm break-all">{value || "—"}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function UuidGeneratorTool() {
+  const [count, setCount] = useState(5)
+  const [uuids, setUuids] = useState<string[]>([])
+
+  const generate = () => {
+    const list = Array.from({ length: count }, () => crypto.randomUUID())
+    setUuids(list)
+  }
+
+  useEffect(() => {
+    generate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+      <section className={cardClass}>
+        <label className="grid gap-2 text-sm">
+          Quantity: <span className="font-medium">{count}</span>
+          <Slider
+            min={1}
+            max={50}
+            step={1}
+            value={[count]}
+            onValueChange={(value) => setCount(value[0] ?? 1)}
+          />
+        </label>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button onClick={generate}>Generate</Button>
+          <Button
+            variant="outline"
+            onClick={() => navigator.clipboard.writeText(uuids.join("\n"))}
+            disabled={uuids.length === 0}
+          >
+            Copy all
+          </Button>
+        </div>
+      </section>
+
+      <section className={cardClass}>
+        <h3 className="font-medium">UUID list</h3>
+        <div className="mt-3 max-h-[420px] space-y-2 overflow-auto pr-1">
+          {uuids.map((uuid) => (
+            <div key={uuid} className="rounded-md border border-border bg-background p-2">
+              <p className="font-mono text-xs break-all">{uuid}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function BoxShadowGlassmorphismTool() {
+  const [offsetX, setOffsetX] = useState(0)
+  const [offsetY, setOffsetY] = useState(18)
+  const [blur, setBlur] = useState(40)
+  const [spread, setSpread] = useState(-10)
+  const [opacity, setOpacity] = useState(0.22)
+  const [glassBlur, setGlassBlur] = useState(16)
+  const [glassAlpha, setGlassAlpha] = useState(0.2)
+  const [radius, setRadius] = useState(20)
+
+  const shadowCss = `${offsetX}px ${offsetY}px ${blur}px ${spread}px rgba(0, 0, 0, ${opacity.toFixed(2)})`
+  const glassCss = `background: rgba(255, 255, 255, ${glassAlpha.toFixed(2)}); backdrop-filter: blur(${glassBlur}px); border-radius: ${radius}px;`
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[380px_1fr]">
+      <section className={cardClass}>
+        <h3 className="font-medium">Controls</h3>
+        <div className="mt-3 space-y-3 text-sm">
+          <label className="grid gap-2">X offset ({offsetX}px)<Slider min={-80} max={80} step={1} value={[offsetX]} onValueChange={(value) => setOffsetX(value[0] ?? 0)} /></label>
+          <label className="grid gap-2">Y offset ({offsetY}px)<Slider min={-80} max={80} step={1} value={[offsetY]} onValueChange={(value) => setOffsetY(value[0] ?? 0)} /></label>
+          <label className="grid gap-2">Blur ({blur}px)<Slider min={0} max={120} step={1} value={[blur]} onValueChange={(value) => setBlur(value[0] ?? 0)} /></label>
+          <label className="grid gap-2">Spread ({spread}px)<Slider min={-60} max={60} step={1} value={[spread]} onValueChange={(value) => setSpread(value[0] ?? 0)} /></label>
+          <label className="grid gap-2">Shadow opacity ({Math.round(opacity * 100)}%)<Slider min={0} max={1} step={0.01} value={[opacity]} onValueChange={(value) => setOpacity(value[0] ?? 0)} /></label>
+          <label className="grid gap-2">Glass blur ({glassBlur}px)<Slider min={0} max={40} step={1} value={[glassBlur]} onValueChange={(value) => setGlassBlur(value[0] ?? 0)} /></label>
+          <label className="grid gap-2">Glass alpha ({Math.round(glassAlpha * 100)}%)<Slider min={0.05} max={0.8} step={0.01} value={[glassAlpha]} onValueChange={(value) => setGlassAlpha(value[0] ?? 0)} /></label>
+          <label className="grid gap-2">Radius ({radius}px)<Slider min={0} max={40} step={1} value={[radius]} onValueChange={(value) => setRadius(value[0] ?? 0)} /></label>
+        </div>
+      </section>
+
+      <section className={cardClass}>
+        <h3 className="font-medium">Live preview</h3>
+        <div className="mt-3 rounded-xl border border-border bg-background p-8">
+          <div className="grid place-items-center rounded-lg bg-linear-to-br from-cyan-500/40 to-purple-500/30 p-10">
+            <div
+              className="h-44 w-full max-w-sm border border-white/40"
+              style={{
+                boxShadow: shadowCss,
+                backgroundColor: `rgba(255,255,255,${glassAlpha})`,
+                backdropFilter: `blur(${glassBlur}px)`,
+                borderRadius: `${radius}px`,
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 rounded-md border border-border bg-background p-3">
+          <p className="text-xs text-muted-foreground">CSS</p>
+          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs">{`box-shadow: ${shadowCss};\n${glassCss}`}</pre>
+          <Button
+            className="mt-3"
+            variant="outline"
+            onClick={() => navigator.clipboard.writeText(`box-shadow: ${shadowCss};\n${glassCss}`)}
+          >
+            Copy CSS
+          </Button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function MeshGradientGeneratorTool() {
+  const [angle, setAngle] = useState(135)
+  const [colorA, setColorA] = useState("#7c3aed")
+  const [colorB, setColorB] = useState("#06b6d4")
+  const [colorC, setColorC] = useState("#ec4899")
+
+  const cssValue = `linear-gradient(${angle}deg, ${colorA} 0%, ${colorB} 50%, ${colorC} 100%)`
+
+  const randomize = () => {
+    const randomHex = () => `#${Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0")}`
+    setColorA(randomHex())
+    setColorB(randomHex())
+    setColorC(randomHex())
+    setAngle(Math.floor(Math.random() * 360))
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+      <section className={cardClass}>
+        <h3 className="font-medium">Gradient controls</h3>
+        <div className="mt-3 space-y-3 text-sm">
+          <label className="grid gap-2">
+            Angle ({angle}°)
+            <Slider min={0} max={360} step={1} value={[angle]} onValueChange={(value) => setAngle(value[0] ?? 0)} />
+          </label>
+
+          <label className="grid gap-2">
+            Color A
+            <input type="color" value={colorA} onChange={(event) => setColorA(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background p-1" />
+          </label>
+          <label className="grid gap-2">
+            Color B
+            <input type="color" value={colorB} onChange={(event) => setColorB(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background p-1" />
+          </label>
+          <label className="grid gap-2">
+            Color C
+            <input type="color" value={colorC} onChange={(event) => setColorC(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background p-1" />
+          </label>
+
+          <Button onClick={randomize}>Randomize</Button>
+        </div>
+      </section>
+
+      <section className={cardClass}>
+        <h3 className="font-medium">Preview</h3>
+        <div className="mt-3 min-h-[320px] rounded-xl border border-border" style={{ background: cssValue }} />
+        <div className="mt-3 rounded-md border border-border bg-background p-3">
+          <p className="text-xs text-muted-foreground">CSS</p>
+          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs">{`background: ${cssValue};`}</pre>
+          <Button
+            className="mt-3"
+            variant="outline"
+            onClick={() => navigator.clipboard.writeText(`background: ${cssValue};`)}
+          >
+            Copy CSS
+          </Button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function ImageOcrTool() {
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
+  const [language, setLanguage] = useState("eng")
+  const [result, setResult] = useState("")
+  const [progress, setProgress] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    if (!file) {
+      setPreview(null)
+      return
+    }
+    const url = URL.createObjectURL(file)
+    setPreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [file])
+
+  const runOcr = async () => {
+    if (!file) return
+    setLoading(true)
+    setError("")
+    setProgress(0)
+
+    try {
+      const Tesseract = await import("tesseract.js")
+      const output = await Tesseract.recognize(file, language, {
+        logger: (message) => {
+          if (message.status === "recognizing text") {
+            setProgress(Math.round((message.progress ?? 0) * 100))
+          }
+        },
+      })
+      setResult(output.data.text.trim())
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "OCR failed"
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <section className={cardClass}>
+        <h3 className="font-medium">Image OCR</h3>
+        <div className="mt-3 grid gap-3">
+          <input
+            type="file"
+            accept="image/*"
+            className={fieldClass}
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+          />
+
+          <label className="grid gap-2 text-sm">
+            Language
+            <select
+              className={fieldClass}
+              value={language}
+              onChange={(event) => setLanguage(event.target.value)}
+            >
+              <option value="eng">English</option>
+              <option value="por">Portuguese</option>
+            </select>
+          </label>
+
+          <div className="flex gap-2">
+            <Button onClick={runOcr} disabled={!file || loading}>
+              {loading ? "Extracting..." : "Extract text"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigator.clipboard.writeText(result)}
+              disabled={!result}
+            >
+              Copy text
+            </Button>
+          </div>
+
+          {loading && (
+            <p className="text-sm text-muted-foreground">Progress: {progress}%</p>
+          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <div className="rounded-md border border-border bg-background p-3">
+            <p className="text-xs text-muted-foreground">Detected text</p>
+            <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap text-sm">{result || "No text extracted yet."}</pre>
+          </div>
+        </div>
+      </section>
+
+      <section className={cardClass}>
+        <h3 className="font-medium">Preview</h3>
+        <div className="mt-3 flex min-h-[420px] items-center justify-center rounded-lg border border-border bg-background p-3">
+          {preview ? (
+            <img src={preview} alt="OCR preview" className="max-h-[390px] w-full object-contain" />
+          ) : (
+            <p className="text-sm text-muted-foreground">Upload an image to start OCR</p>
+          )}
+        </div>
+      </section>
+    </div>
+  )
+}
+
 export function MigratedToolView({ slug }: MigratedToolViewProps) {
   if (slug === "time-converter") return <TimeConverterTool />
   if (slug === "password-generator") return <PasswordGeneratorTool />
@@ -552,6 +903,11 @@ export function MigratedToolView({ slug }: MigratedToolViewProps) {
   if (slug === "image-compressor") return <ImageCompressorTool />
   if (slug === "text-to-pdf") return <TextToPdfTool />
   if (slug === "json-formatter") return <JsonFormatterTool />
+  if (slug === "case-converter") return <CaseConverterTool />
+  if (slug === "uuid-generator") return <UuidGeneratorTool />
+  if (slug === "box-shadow-glassmorphism") return <BoxShadowGlassmorphismTool />
+  if (slug === "mesh-gradient-generator") return <MeshGradientGeneratorTool />
+  if (slug === "image-ocr") return <ImageOcrTool />
 
   return (
     <div className={cardClass}>

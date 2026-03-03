@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { compressImage, formatBytes } from "@/_projetos_originais/src/utils/compressImage"
 
@@ -27,6 +27,7 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 
 export function FullImageCompressorTool() {
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const busyRef = useRef(false)
 
   const [file, setFile] = useState<File | null>(null)
   const [originalUrl, setOriginalUrl] = useState<string | null>(null)
@@ -119,9 +120,10 @@ export function FullImageCompressorTool() {
     }
   }
 
-  const handleCompress = useCallback(async () => {
-    if (!file || isWorking) return
+  const handleCompress = async () => {
+    if (!file || isWorking || busyRef.current) return
 
+    busyRef.current = true
     setIsWorking(true)
     setError("")
 
@@ -144,9 +146,10 @@ export function FullImageCompressorTool() {
       const message = caughtError instanceof Error ? caughtError.message : "Something went wrong."
       setError(message)
     } finally {
+      busyRef.current = false
       setIsWorking(false)
     }
-  }, [file, isWorking, settings])
+  }
 
   const setMaxWidthWithRatio = (nextWidth: number) => {
     const width = clamp(nextWidth, 64, 8000)

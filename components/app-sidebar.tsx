@@ -44,6 +44,11 @@ const toolIcons: Record<string, LucideIcon> = {
   "image-compressor": Minimize2,
   "text-to-pdf": FileText,
   "json-formatter": Braces,
+  "case-converter": FileText,
+  "uuid-generator": Key,
+  "box-shadow-glassmorphism": Minimize2,
+  "mesh-gradient-generator": Palette,
+  "image-ocr": ImageIcon,
 }
 
 export function AppSidebar() {

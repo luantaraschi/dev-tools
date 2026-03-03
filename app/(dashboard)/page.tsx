@@ -26,6 +26,11 @@ const toolIcons: Record<string, ReactNode> = {
   "image-compressor": <Minimize2 />,
   "text-to-pdf": <FileText />,
   "json-formatter": <Braces />,
+  "case-converter": <FileText />,
+  "uuid-generator": <Key />,
+  "box-shadow-glassmorphism": <Minimize2 />,
+  "mesh-gradient-generator": <Palette />,
+  "image-ocr": <ImageIcon />,
 }
 
 export default function DashboardPage() {
@@ -47,7 +52,7 @@ export default function DashboardPage() {
         <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
           A curated collection of{" "}
           <span className="font-semibold text-foreground">
-            10 practical developer utilities
+            {tools.length} practical developer utilities
           </span>{" "}
           built by <span className="font-semibold text-foreground">Luan Taraschi</span> with Next.js, React, and Tailwind CSS. Click any card below to open the tool.
         </p>
@@ -56,7 +61,7 @@ export default function DashboardPage() {
       <div className="flex flex-wrap gap-6 rounded-xl border border-border bg-muted/30 px-6 py-4 text-sm">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500" />
-          <span className="font-medium text-foreground">10 tools available</span>
+          <span className="font-medium text-foreground">{tools.length} tools available</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-blue-500" />

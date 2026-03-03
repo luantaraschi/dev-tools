@@ -40,50 +40,50 @@ export function FullImageConverterTool() {
       let sourceBlob: Blob = file
       if (isHeic) {
         const { default: heic2any } = await import("heic2any")
-        const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.95 })
+        const converted = await heic2any({ blob: file, toType: format, quality: 0.95 })
         sourceBlob = Array.isArray(converted) ? converted[0] : converted
       }
 
       sourceUrl = URL.createObjectURL(sourceBlob)
-      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const element = new Image()
-        element.onload = () => resolve(element)
-        element.onerror = () => reject(new Error("Failed to decode image"))
-        element.src = sourceUrl as string
+      const outputBlob = await new Promise<Blob>((resolve, reject) => {
+        const image = new Image()
+
+        image.onload = () => {
+          const canvas = document.createElement("canvas")
+          canvas.width = image.naturalWidth || image.width
+          canvas.height = image.naturalHeight || image.height
+
+          const context = canvas.getContext("2d")
+          if (!context) {
+            reject(new Error("Canvas not supported"))
+            return
+          }
+
+          if (format === "image/jpeg") {
+            context.fillStyle = "#fff"
+            context.fillRect(0, 0, canvas.width, canvas.height)
+          }
+
+          context.drawImage(image, 0, 0)
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Conversion failed"))
+                return
+              }
+              resolve(blob)
+            },
+            format,
+            0.95
+          )
+        }
+
+        image.onerror = () => reject(new Error("Failed to decode image"))
+        image.src = sourceUrl as string
       })
 
-      const canvas = document.createElement("canvas")
-      canvas.width = image.naturalWidth || image.width
-      canvas.height = image.naturalHeight || image.height
-      const context = canvas.getContext("2d", { alpha: true })
-      if (!context) throw new Error("Canvas not supported")
-
-      if (format === "image/jpeg") {
-        context.fillStyle = "#ffffff"
-        context.fillRect(0, 0, canvas.width, canvas.height)
-      } else {
-        context.clearRect(0, 0, canvas.width, canvas.height)
-      }
-
-      context.imageSmoothingEnabled = true
-      context.imageSmoothingQuality = "high"
-        context.drawImage(image, 0, 0, canvas.width, canvas.height)
-
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob(
-          (result) => {
-            if (!result) {
-              reject(new Error("Conversion failed"))
-              return
-            }
-            resolve(result)
-          },
-          format,
-          0.95
-        )
-      })
-
-      const nextUrl = URL.createObjectURL(blob)
+      const nextUrl = URL.createObjectURL(outputBlob)
       setOutput(nextUrl)
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : "Conversion failed"
