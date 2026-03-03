@@ -1,0 +1,836 @@
+/* eslint-disable @next/next/no-img-element */
+"use client"
+
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { jsPDF } from "jspdf"
+import QRCode from "qrcode"
+import { Button } from "@/components/ui/button"
+
+type MigratedToolViewProps = {
+  slug: string
+}
+
+const fieldClass =
+  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+
+const cardClass = "rounded-xl border border-border bg-card p-4"
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+function formatBytes(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
+  const units = ["B", "KB", "MB", "GB"]
+  let value = bytes
+  let unit = 0
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024
+    unit += 1
+  }
+  return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unit]}`
+}
+
+function TimeConverterTool() {
+  const timezones = [
+    "UTC",
+    "America/Sao_Paulo",
+    "America/New_York",
+    "Europe/London",
+    "Europe/Berlin",
+    "Asia/Tokyo",
+    "Asia/Seoul",
+    "Asia/Dubai",
+    "Australia/Sydney",
+  ]
+
+  const nowLocal = new Date()
+  const defaultInput = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, "0")}-${String(nowLocal.getDate()).padStart(2, "0")}T${String(nowLocal.getHours()).padStart(2, "0")}:${String(nowLocal.getMinutes()).padStart(2, "0")}`
+
+  const [sourceTimeZone, setSourceTimeZone] = useState("America/Sao_Paulo")
+  const [targetTimeZone, setTargetTimeZone] = useState("UTC")
+  const [dateTimeInput, setDateTimeInput] = useState(defaultInput)
+
+  const convertToUtc = (dateTime: string, timeZone: string) => {
+    const [datePart, timePart] = dateTime.split("T")
+    if (!datePart || !timePart) return new Date()
+
+    const [year, month, day] = datePart.split("-").map(Number)
+    const [hour, minute] = timePart.split(":").map(Number)
+
+    const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute))
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+
+    const parts = formatter.formatToParts(utcGuess)
+    const map = Object.fromEntries(
+      parts
+        .filter((part) => part.type !== "literal")
+        .map((part) => [part.type, Number(part.value)])
+    )
+
+    const asUtc = Date.UTC(
+      map.year,
+      (map.month ?? 1) - 1,
+      map.day,
+      map.hour,
+      map.minute
+    )
+
+    const offset = asUtc - utcGuess.getTime()
+    return new Date(utcGuess.getTime() - offset)
+  }
+
+  const sourceUtcDate = useMemo(
+    () => convertToUtc(dateTimeInput, sourceTimeZone),
+    [dateTimeInput, sourceTimeZone]
+  )
+
+  const sourceFormatted = useMemo(
+    () =>
+      new Intl.DateTimeFormat("pt-BR", {
+        dateStyle: "full",
+        timeStyle: "short",
+        timeZone: sourceTimeZone,
+      }).format(sourceUtcDate),
+    [sourceUtcDate, sourceTimeZone]
+  )
+
+  const targetFormatted = useMemo(
+    () =>
+      new Intl.DateTimeFormat("pt-BR", {
+        dateStyle: "full",
+        timeStyle: "short",
+        timeZone: targetTimeZone,
+      }).format(sourceUtcDate),
+    [sourceUtcDate, targetTimeZone]
+  )
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm">
+            Data e hora
+            <input
+              className={fieldClass}
+              type="datetime-local"
+              value={dateTimeInput}
+              onChange={(event) => setDateTimeInput(event.target.value)}
+            />
+          </label>
+          <label className="grid gap-2 text-sm">
+            Fuso de origem
+            <select
+              className={fieldClass}
+              value={sourceTimeZone}
+              onChange={(event) => setSourceTimeZone(event.target.value)}
+            >
+              {timezones.map((timezone) => (
+                <option key={timezone} value={timezone}>
+                  {timezone}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm sm:col-span-2">
+            Fuso de destino
+            <select
+              className={fieldClass}
+              value={targetTimeZone}
+              onChange={(event) => setTargetTimeZone(event.target.value)}
+            >
+              {timezones.map((timezone) => (
+                <option key={timezone} value={timezone}>
+                  {timezone}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className={cardClass}>
+          <p className="text-xs text-muted-foreground">Origem</p>
+          <p className="mt-1 text-sm font-medium">{sourceFormatted}</p>
+        </div>
+        <div className={cardClass}>
+          <p className="text-xs text-muted-foreground">Destino</p>
+          <p className="mt-1 text-sm font-medium">{targetFormatted}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PasswordGeneratorTool() {
+  const [length, setLength] = useState(16)
+  const [useUpper, setUseUpper] = useState(true)
+  const [useLower, setUseLower] = useState(true)
+  const [useNumbers, setUseNumbers] = useState(true)
+  const [useSymbols, setUseSymbols] = useState(false)
+  const [password, setPassword] = useState("")
+  const [copied, setCopied] = useState(false)
+
+  const generate = useCallback(() => {
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    const lower = "abcdefghijklmnopqrstuvwxyz"
+    const numbers = "0123456789"
+    const symbols = "!@#$%^&*()-_=+[]{};:,.?"
+
+    let chars = ""
+    if (useUpper) chars += upper
+    if (useLower) chars += lower
+    if (useNumbers) chars += numbers
+    if (useSymbols) chars += symbols
+    if (!chars) return
+
+    const values = new Uint32Array(length)
+    crypto.getRandomValues(values)
+    const nextPassword = Array.from(values, (value) => chars[value % chars.length]).join("")
+    setPassword(nextPassword)
+    setCopied(false)
+  }, [length, useLower, useNumbers, useSymbols, useUpper])
+
+  useEffect(() => {
+    generate()
+  }, [generate])
+
+  const handleCopy = async () => {
+    if (!password) return
+    await navigator.clipboard.writeText(password)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <p className="break-all rounded-md border border-border bg-muted/40 p-3 font-mono text-sm">
+          {password || "Selecione opções para gerar"}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button onClick={generate}>Gerar</Button>
+          <Button variant="outline" onClick={handleCopy} disabled={!password}>
+            {copied ? "Copiado" : "Copiar"}
+          </Button>
+        </div>
+      </div>
+
+      <div className={cardClass}>
+        <label className="grid gap-2 text-sm">
+          Tamanho: {length}
+          <input
+            type="range"
+            min={8}
+            max={64}
+            value={length}
+            onChange={(event) => setLength(Number(event.target.value))}
+          />
+        </label>
+        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+          <label><input type="checkbox" checked={useUpper} onChange={() => setUseUpper((prev) => !prev)} /> Maiúsculas</label>
+          <label><input type="checkbox" checked={useLower} onChange={() => setUseLower((prev) => !prev)} /> Minúsculas</label>
+          <label><input type="checkbox" checked={useNumbers} onChange={() => setUseNumbers((prev) => !prev)} /> Números</label>
+          <label><input type="checkbox" checked={useSymbols} onChange={() => setUseSymbols((prev) => !prev)} /> Símbolos</label>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function hexToHsl(hex: string) {
+  const value = hex.replace("#", "")
+  const r = parseInt(value.slice(0, 2), 16) / 255
+  const g = parseInt(value.slice(2, 4), 16) / 255
+  const b = parseInt(value.slice(4, 6), 16) / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const delta = max - min
+
+  let hue = 0
+  if (delta !== 0) {
+    if (max === r) hue = ((g - b) / delta) % 6
+    else if (max === g) hue = (b - r) / delta + 2
+    else hue = (r - g) / delta + 4
+  }
+
+  hue = Math.round(hue * 60)
+  if (hue < 0) hue += 360
+
+  const lightness = (max + min) / 2
+  const saturation =
+    delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1))
+
+  return {
+    h: hue,
+    s: Math.round(saturation * 100),
+    l: Math.round(lightness * 100),
+  }
+}
+
+function hslToHex(h: number, s: number, l: number) {
+  const sat = s / 100
+  const light = l / 100
+  const c = (1 - Math.abs(2 * light - 1)) * sat
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+  const m = light - c / 2
+
+  let r = 0
+  let g = 0
+  let b = 0
+
+  if (h < 60) [r, g, b] = [c, x, 0]
+  else if (h < 120) [r, g, b] = [x, c, 0]
+  else if (h < 180) [r, g, b] = [0, c, x]
+  else if (h < 240) [r, g, b] = [0, x, c]
+  else if (h < 300) [r, g, b] = [x, 0, c]
+  else [r, g, b] = [c, 0, x]
+
+  const toHex = (channel: number) =>
+    Math.round((channel + m) * 255)
+      .toString(16)
+      .padStart(2, "0")
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
+function ColorHarmonyTool() {
+  const [color, setColor] = useState("#6366f1")
+  const hsl = useMemo(() => hexToHsl(color), [color])
+
+  const harmonies = useMemo(
+    () => [
+      { label: "Base", color },
+      { label: "Complementar", color: hslToHex((hsl.h + 180) % 360, hsl.s, hsl.l) },
+      { label: "Análoga -", color: hslToHex((hsl.h + 330) % 360, hsl.s, hsl.l) },
+      { label: "Análoga +", color: hslToHex((hsl.h + 30) % 360, hsl.s, hsl.l) },
+      { label: "Triádica 1", color: hslToHex((hsl.h + 120) % 360, hsl.s, hsl.l) },
+      { label: "Triádica 2", color: hslToHex((hsl.h + 240) % 360, hsl.s, hsl.l) },
+    ],
+    [color, hsl.h, hsl.l, hsl.s]
+  )
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <label className="grid gap-2 text-sm sm:max-w-xs">
+          Cor base
+          <input type="color" value={color} onChange={(event) => setColor(event.target.value)} className="h-11 w-full rounded-md border border-input bg-background p-1" />
+        </label>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {harmonies.map((item) => (
+          <button
+            key={item.label}
+            className={cardClass}
+            onClick={() => navigator.clipboard.writeText(item.color)}
+            type="button"
+          >
+            <div className="h-16 rounded-md border border-border" style={{ backgroundColor: item.color }} />
+            <p className="mt-2 text-xs text-muted-foreground">{item.label}</p>
+            <p className="text-sm font-medium">{item.color.toUpperCase()}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ColorPaletteExtractorTool() {
+  const [preview, setPreview] = useState<string | null>(null)
+  const [palette, setPalette] = useState<string[]>([])
+
+  const extractPalette = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const source = reader.result
+      if (typeof source !== "string") return
+      setPreview(source)
+
+      const image = new Image()
+      image.onload = () => {
+        const canvas = document.createElement("canvas")
+        const context = canvas.getContext("2d")
+        if (!context) return
+
+        const max = 120
+        const ratio = Math.min(1, max / Math.max(image.width, image.height))
+        canvas.width = Math.max(1, Math.floor(image.width * ratio))
+        canvas.height = Math.max(1, Math.floor(image.height * ratio))
+        context.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+        const data = context.getImageData(0, 0, canvas.width, canvas.height).data
+        const buckets = new Map<string, number>()
+
+        for (let index = 0; index < data.length; index += 4) {
+          const alpha = data[index + 3]
+          if (alpha < 120) continue
+          const r = Math.round(data[index] / 32) * 32
+          const g = Math.round(data[index + 1] / 32) * 32
+          const b = Math.round(data[index + 2] / 32) * 32
+          const key = `${r},${g},${b}`
+          buckets.set(key, (buckets.get(key) ?? 0) + 1)
+        }
+
+        const colors = [...buckets.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8)
+          .map(([rgb]) => {
+            const [r, g, b] = rgb.split(",").map(Number)
+            return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`
+          })
+
+        setPalette(colors)
+      }
+      image.src = source
+    }
+
+    reader.readAsDataURL(file)
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <input
+          type="file"
+          accept="image/*"
+          className={fieldClass}
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            if (file) extractPalette(file)
+          }}
+        />
+      </div>
+
+      {preview && (
+        <div className={cardClass}>
+          <img src={preview} alt="Prévia" className="max-h-64 w-full rounded-md object-contain" />
+        </div>
+      )}
+
+      {palette.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {palette.map((color) => (
+            <button key={color} className={cardClass} onClick={() => navigator.clipboard.writeText(color)}>
+              <div className="h-14 rounded-md border border-border" style={{ backgroundColor: color }} />
+              <p className="mt-2 text-sm font-medium">{color.toUpperCase()}</p>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function QrGeneratorTool() {
+  const [text, setText] = useState("")
+  const [dataUrl, setDataUrl] = useState("")
+
+  useEffect(() => {
+    if (!text.trim()) {
+      setDataUrl("")
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      const url = await QRCode.toDataURL(text, { width: 512, margin: 2 })
+      setDataUrl(url)
+    }, 150)
+
+    return () => clearTimeout(timer)
+  }, [text])
+
+  const downloadPng = async () => {
+    if (!dataUrl) return
+    const response = await fetch(dataUrl)
+    const blob = await response.blob()
+    downloadBlob(blob, "qr-code.png")
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <label className="grid gap-2 text-sm">
+          Link ou texto
+          <textarea
+            className={`${fieldClass} min-h-24`}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder="Digite um URL, texto ou payload..."
+          />
+        </label>
+      </div>
+
+      <div className={`${cardClass} flex min-h-56 items-center justify-center`}>
+        {dataUrl ? (
+          <img src={dataUrl} alt="QR gerado" className="h-52 w-52 rounded-md border border-border" />
+        ) : (
+          <p className="text-sm text-muted-foreground">Digite algo para gerar o QR code.</p>
+        )}
+      </div>
+
+      <div>
+        <Button onClick={downloadPng} disabled={!dataUrl}>
+          Download PNG
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function ImageConverterTool() {
+  const [file, setFile] = useState<File | null>(null)
+  const [targetFormat, setTargetFormat] = useState("image/png")
+  const [quality, setQuality] = useState(0.9)
+  const [preview, setPreview] = useState<string>("")
+
+  useEffect(() => {
+    if (!file) {
+      setPreview("")
+      return
+    }
+    setPreview(URL.createObjectURL(file))
+  }, [file])
+
+  const handleConvert = () => {
+    if (!file) return
+
+    const image = new Image()
+    image.onload = () => {
+      const canvas = document.createElement("canvas")
+      canvas.width = image.width
+      canvas.height = image.height
+      const context = canvas.getContext("2d")
+      if (!context) return
+      context.drawImage(image, 0, 0)
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return
+          const ext = targetFormat.split("/")[1]
+          downloadBlob(blob, `converted.${ext}`)
+        },
+        targetFormat,
+        quality
+      )
+    }
+    image.src = URL.createObjectURL(file)
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <input
+          type="file"
+          accept="image/*"
+          className={fieldClass}
+          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+        />
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm">
+            Formato
+            <select className={fieldClass} value={targetFormat} onChange={(event) => setTargetFormat(event.target.value)}>
+              <option value="image/png">PNG</option>
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/webp">WebP</option>
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm">
+            Qualidade: {Math.round(quality * 100)}%
+            <input type="range" min={0.1} max={1} step={0.05} value={quality} onChange={(event) => setQuality(Number(event.target.value))} />
+          </label>
+        </div>
+      </div>
+
+      {preview && (
+        <div className={cardClass}>
+          <img src={preview} alt="Prévia" className="max-h-72 w-full rounded-md object-contain" />
+        </div>
+      )}
+
+      <div>
+        <Button onClick={handleConvert} disabled={!file}>
+          Converter e baixar
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function BgRemoverTool() {
+  const [file, setFile] = useState<File | null>(null)
+  const [resultUrl, setResultUrl] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleRemove = async () => {
+    if (!file) return
+    setLoading(true)
+    setError("")
+
+    try {
+      const formData = new FormData()
+      formData.append("image_file", file)
+      const response = await fetch("/api/remove-bg", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const message = await response.text()
+        throw new Error(message || "Falha ao remover fundo")
+      }
+
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      setResultUrl(objectUrl)
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof Error ? caughtError.message : "Erro inesperado"
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <input
+          type="file"
+          accept="image/*"
+          className={fieldClass}
+          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+        />
+        <p className="mt-2 text-xs text-muted-foreground">
+          Requer `REMOVE_BG_API_KEY` configurada no servidor Next.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={handleRemove} disabled={!file || loading}>
+          {loading ? "Processando..." : "Remover fundo"}
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!resultUrl}
+          onClick={async () => {
+            if (!resultUrl) return
+            const response = await fetch(resultUrl)
+            const blob = await response.blob()
+            downloadBlob(blob, "background-removed.png")
+          }}
+        >
+          Baixar PNG
+        </Button>
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {resultUrl && (
+        <div className={cardClass}>
+          <img src={resultUrl} alt="Resultado sem fundo" className="max-h-80 w-full rounded-md object-contain" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ImageCompressorTool() {
+  const [file, setFile] = useState<File | null>(null)
+  const [quality, setQuality] = useState(0.75)
+  const [maxWidth, setMaxWidth] = useState(1600)
+  const [result, setResult] = useState<Blob | null>(null)
+
+  const before = file?.size ?? 0
+  const after = result?.size ?? 0
+
+  const compress = () => {
+    if (!file) return
+    const image = new Image()
+    image.onload = () => {
+      const ratio = Math.min(1, maxWidth / image.width)
+      const canvas = document.createElement("canvas")
+      canvas.width = Math.max(1, Math.floor(image.width * ratio))
+      canvas.height = Math.max(1, Math.floor(image.height * ratio))
+      const context = canvas.getContext("2d")
+      if (!context) return
+      context.drawImage(image, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return
+          setResult(blob)
+        },
+        "image/jpeg",
+        quality
+      )
+    }
+    image.src = URL.createObjectURL(file)
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <input type="file" accept="image/*" className={fieldClass} onChange={(event) => {
+          setFile(event.target.files?.[0] ?? null)
+          setResult(null)
+        }} />
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm">
+            Qualidade JPEG: {Math.round(quality * 100)}%
+            <input type="range" min={0.2} max={1} step={0.05} value={quality} onChange={(event) => setQuality(Number(event.target.value))} />
+          </label>
+          <label className="grid gap-2 text-sm">
+            Largura máxima: {maxWidth}px
+            <input type="range" min={600} max={3200} step={100} value={maxWidth} onChange={(event) => setMaxWidth(Number(event.target.value))} />
+          </label>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button onClick={compress} disabled={!file}>Comprimir</Button>
+        <Button
+          variant="outline"
+          disabled={!result}
+          onClick={() => result && downloadBlob(result, "compressed.jpg")}
+        >
+          Baixar
+        </Button>
+      </div>
+
+      {(before > 0 || after > 0) && (
+        <div className={cardClass}>
+          <p className="text-sm">Original: {formatBytes(before)}</p>
+          <p className="text-sm">Comprimida: {formatBytes(after)}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TextToPdfTool() {
+  const [text, setText] = useState("")
+
+  const generatePdf = () => {
+    const document = new jsPDF({ unit: "pt", format: "a4" })
+    const margin = 40
+    const width = document.internal.pageSize.getWidth() - margin * 2
+
+    const lines = document.splitTextToSize(text || " ", width)
+    let y = margin
+
+    lines.forEach((line: string) => {
+      if (y > document.internal.pageSize.getHeight() - margin) {
+        document.addPage()
+        y = margin
+      }
+      document.text(line, margin, y)
+      y += 16
+    })
+
+    document.save("text-to-pdf.pdf")
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <label className="grid gap-2 text-sm">
+          Conteúdo
+          <textarea
+            className={`${fieldClass} min-h-60`}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder="Escreva ou cole seu conteúdo aqui..."
+          />
+        </label>
+      </div>
+      <div>
+        <Button onClick={generatePdf} disabled={!text.trim()}>
+          Gerar PDF
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function JsonFormatterTool() {
+  const [value, setValue] = useState('{"project":"Dev Tools","owner":"Luan Taraschi"}')
+  const [error, setError] = useState("")
+
+  const handleFormat = () => {
+    try {
+      const parsed = JSON.parse(value)
+      setValue(JSON.stringify(parsed, null, 2))
+      setError("")
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "JSON inválido"
+      setError(message)
+    }
+  }
+
+  const handleMinify = () => {
+    try {
+      const parsed = JSON.parse(value)
+      setValue(JSON.stringify(parsed))
+      setError("")
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "JSON inválido"
+      setError(message)
+    }
+  }
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(value)
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div className={cardClass}>
+        <textarea className={`${fieldClass} min-h-72 font-mono text-xs`} value={value} onChange={(event) => setValue(event.target.value)} />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={handleFormat}>Formatar</Button>
+        <Button variant="secondary" onClick={handleMinify}>Minificar</Button>
+        <Button variant="outline" onClick={handleCopy}>Copiar</Button>
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  )
+}
+
+export function MigratedToolView({ slug }: MigratedToolViewProps) {
+  if (slug === "time-converter") return <TimeConverterTool />
+  if (slug === "password-generator") return <PasswordGeneratorTool />
+  if (slug === "color-harmony") return <ColorHarmonyTool />
+  if (slug === "color-palette-extractor") return <ColorPaletteExtractorTool />
+  if (slug === "qr-generator") return <QrGeneratorTool />
+  if (slug === "image-converter") return <ImageConverterTool />
+  if (slug === "bg-remover") return <BgRemoverTool />
+  if (slug === "image-compressor") return <ImageCompressorTool />
+  if (slug === "text-to-pdf") return <TextToPdfTool />
+  if (slug === "json-formatter") return <JsonFormatterTool />
+
+  return (
+    <div className={cardClass}>
+      <p className="text-sm text-muted-foreground">Ferramenta não encontrada.</p>
+    </div>
+  )
+}

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, Wrench } from "lucide-react"
+import { MigratedToolView } from "@/components/tools/migrated-tool-view"
 import { getToolBySlug, tools } from "@/lib/tools"
 
 type ToolPageProps = {
@@ -46,9 +47,12 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
         <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4">
           <p className="text-sm text-muted-foreground">
-            This route is now active and stable. The standalone tool app still
-            needs migration into the Next.js dashboard.
+            Integrated tool view with unified Dev Tools dashboard design.
           </p>
+        </div>
+
+        <div className="mt-4">
+          <MigratedToolView slug={tool.slug} />
         </div>
       </section>
     </div>
