@@ -2,7 +2,6 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import heic2any from "heic2any"
 import { Button } from "@/components/ui/button"
 import { compressImage, formatBytes } from "@/_projetos_originais/src/utils/compressImage"
 
@@ -100,6 +99,7 @@ export function FullImageCompressorTool() {
 
       let normalized: File = selected
       if (isHeic) {
+        const { default: heic2any } = await import("heic2any")
         const converted = await heic2any({ blob: selected, toType: "image/jpeg", quality: 0.92 })
         const jpegBlob = Array.isArray(converted) ? converted[0] : converted
         normalized = new File([jpegBlob], "image.jpg", { type: "image/jpeg" })

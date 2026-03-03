@@ -138,6 +138,53 @@ function ColorHarmonyTool() {
 function ColorPaletteExtractorTool() {
   const [preview, setPreview] = useState<string | null>(null)
   const [palette, setPalette] = useState<string[]>([])
+  const [colorCount, setColorCount] = useState(6)
+  const [colorFormat, setColorFormat] = useState<"hex" | "rgb" | "hsl">("hex")
+
+  const rgbToHsl = (r: number, g: number, b: number) => {
+    const rn = r / 255
+    const gn = g / 255
+    const bn = b / 255
+    const max = Math.max(rn, gn, bn)
+    const min = Math.min(rn, gn, bn)
+    const delta = max - min
+
+    let h = 0
+    if (delta !== 0) {
+      if (max === rn) h = ((gn - bn) / delta) % 6
+      else if (max === gn) h = (bn - rn) / delta + 2
+      else h = (rn - gn) / delta + 4
+    }
+
+    h = Math.round(h * 60)
+    if (h < 0) h += 360
+
+    const l = (max + min) / 2
+    const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1))
+
+    return {
+      h,
+      s: Math.round(s * 100),
+      l: Math.round(l * 100),
+    }
+  }
+
+  const toDisplayColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+
+    if (colorFormat === "rgb") {
+      return `rgb(${r}, ${g}, ${b})`
+    }
+
+    if (colorFormat === "hsl") {
+      const hsl = rgbToHsl(r, g, b)
+      return `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`
+    }
+
+    return hex.toUpperCase()
+  }
 
   const extractPalette = (file: File) => {
     const reader = new FileReader()
@@ -173,7 +220,7 @@ function ColorPaletteExtractorTool() {
 
         const colors = [...buckets.entries()]
           .sort((a, b) => b[1] - a[1])
-          .slice(0, 8)
+          .slice(0, colorCount)
           .map(([rgb]) => {
             const [r, g, b] = rgb.split(",").map(Number)
             return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`
@@ -187,36 +234,115 @@ function ColorPaletteExtractorTool() {
     reader.readAsDataURL(file)
   }
 
+  const reExtract = () => {
+    if (!preview) return
+    fetch(preview)
+      .then((response) => response.blob())
+      .then((blob) => {
+        const file = new File([blob], "image.png", { type: blob.type || "image/png" })
+        extractPalette(file)
+      })
+  }
+
   return (
-    <div className="grid gap-4">
-      <div className={cardClass}>
-        <input
-          type="file"
-          accept="image/*"
-          className={fieldClass}
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-            if (file) extractPalette(file)
-          }}
-        />
-      </div>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <section className="rounded-xl border border-border bg-card p-4">
+        <h2 className="text-lg font-semibold">Color Palette Extractor</h2>
+        <p className="text-sm text-muted-foreground">Extract beautiful color palettes from any image.</p>
 
-      {preview && (
-        <div className={cardClass}>
-          <img src={preview} alt="Prévia" className="max-h-64 w-full rounded-md object-contain" />
-        </div>
-      )}
+        <div className="mt-4 grid gap-4">
+          <label className="grid cursor-pointer place-items-center gap-2 rounded-lg border border-dashed border-border bg-background px-4 py-10 text-sm hover:bg-accent">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) extractPalette(file)
+              }}
+            />
+            <span className="font-medium">Drop an image</span>
+            <span className="text-muted-foreground">or click to browse</span>
+          </label>
 
-      {palette.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {palette.map((color) => (
-            <button key={color} className={cardClass} onClick={() => navigator.clipboard.writeText(color)}>
-              <div className="h-14 rounded-md border border-border" style={{ backgroundColor: color }} />
-              <p className="mt-2 text-sm font-medium">{color.toUpperCase()}</p>
-            </button>
-          ))}
+          <label className="grid gap-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span>Number of colors</span>
+              <span className="font-medium">{colorCount}</span>
+            </div>
+            <input
+              type="range"
+              min={3}
+              max={12}
+              value={colorCount}
+              onChange={(event) => setColorCount(Number(event.target.value))}
+            />
+          </label>
+
+          <div className="grid gap-2 text-sm">
+            <span>Color format</span>
+            <div className="grid grid-cols-3 gap-2">
+              {(["hex", "rgb", "hsl"] as const).map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  onClick={() => setColorFormat(format)}
+                  className={`rounded-md border px-3 py-2 text-sm uppercase ${
+                    colorFormat === format
+                      ? "border-primary bg-primary/10 text-foreground"
+                      : "border-border bg-background text-muted-foreground"
+                  }`}
+                >
+                  {format}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Button onClick={reExtract} disabled={!preview}>Re-extract Colors</Button>
+
+          <div className="rounded-md border border-border bg-background px-3 py-2 text-sm text-muted-foreground">
+            Click any color to copy its value to clipboard.
+          </div>
         </div>
-      )}
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">Palette</h3>
+          <Button variant="ghost" size="sm" onClick={() => {
+            setPreview(null)
+            setPalette([])
+          }} disabled={!preview && palette.length === 0}>
+            Clear
+          </Button>
+        </div>
+
+        <div className="mt-4 min-h-[430px] rounded-lg border border-border bg-background p-3">
+          {!preview ? (
+            <div className="flex h-full min-h-[400px] items-center justify-center text-sm text-muted-foreground">
+              Upload an image to extract colors
+            </div>
+          ) : (
+            <div className="grid h-full gap-3">
+              <img src={preview} alt="Preview" className="max-h-56 w-full rounded-md object-contain" />
+              <div className="grid gap-2">
+                {palette.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(toDisplayColor(color))}
+                    className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-left hover:bg-accent"
+                  >
+                    <span className="h-8 w-8 shrink-0 rounded border border-border" style={{ backgroundColor: color }} />
+                    <span className="font-mono text-sm">{toDisplayColor(color)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   )
 }

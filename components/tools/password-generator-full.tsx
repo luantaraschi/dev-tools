@@ -43,26 +43,28 @@ export function FullPasswordGeneratorTool() {
     [mode, options, password]
   )
 
-  const generate = useCallback(() => {
+  const generate = useCallback((trackHistory = true) => {
     let next = ""
 
     if (mode === "random") next = generatePassword(length, options)
     if (mode === "pronounceable") next = generatePronounceable(length)
     if (mode === "passphrase") next = generatePassphrase(wordCount)
 
-    if (next && password && next !== password) {
-      setHistory((prev) => {
-        const unique = [password, ...prev.filter((item) => item !== password)]
-        return unique.slice(0, MAX_HISTORY)
-      })
-    }
+    setPassword((previous) => {
+      if (trackHistory && next && previous && next !== previous) {
+        setHistory((prev) => {
+          const unique = [previous, ...prev.filter((item) => item !== previous)]
+          return unique.slice(0, MAX_HISTORY)
+        })
+      }
+      return next
+    })
 
-    setPassword(next)
     setCopied(false)
-  }, [length, mode, options, password, wordCount])
+  }, [length, mode, options, wordCount])
 
   useEffect(() => {
-    generate()
+    generate(false)
   }, [generate])
 
   const handleCopy = async (value = password) => {
@@ -199,7 +201,7 @@ export function FullPasswordGeneratorTool() {
           )}
 
           <div className="flex gap-2">
-            <Button onClick={generate}>Generate</Button>
+            <Button onClick={() => generate()}>Generate</Button>
             <Button variant="outline" onClick={() => handleCopy()} disabled={!password}>
               {copied ? "Copied!" : "Copy"}
             </Button>

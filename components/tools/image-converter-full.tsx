@@ -2,7 +2,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import heic2any from "heic2any"
 import { Button } from "@/components/ui/button"
 
 export function FullImageConverterTool() {
@@ -38,6 +37,7 @@ export function FullImageConverterTool() {
 
       let sourceBlob: Blob = file
       if (isHeic) {
+        const { default: heic2any } = await import("heic2any")
         const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.95 })
         sourceBlob = Array.isArray(converted) ? converted[0] : converted
       }
