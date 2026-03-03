@@ -13,6 +13,10 @@ O projeto **Dev Tools** foi construido em **Next.js 15 + React 19 + TypeScript**
 
 Repositorio: <https://github.com/luantaraschi/dev-tools>
 
+## Teste agora
+
+Acesse a versao online: <https://dev-tools-xi-beige.vercel.app/>
+
 ## Destaques
 
 - Dashboard unico com navegacao por cards e sidebar.
