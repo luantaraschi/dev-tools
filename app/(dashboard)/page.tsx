@@ -1,42 +1,6 @@
-import {
-  Braces,
-  Clock,
-  FileText,
-  ImageIcon,
-  Key,
-  Minimize2,
-  Palette,
-  Pipette,
-  QrCode,
-  Scissors,
-  Wrench,
-  Dices,
-  Percent,
-} from "lucide-react"
-import { type ReactNode } from "react"
-import { ToolCard } from "@/components/tool-card"
 import { BubbleText } from "@/components/ui/bubble-text"
+import { ToolsSearch } from "@/components/tools/tools-search"
 import { tools } from "@/lib/tools"
-
-const toolIcons: Record<string, ReactNode> = {
-  "time-converter": <Clock />,
-  "password-generator": <Key />,
-  "color-harmony": <Palette />,
-  "color-palette-extractor": <Pipette />,
-  "qr-generator": <QrCode />,
-  "image-converter": <ImageIcon />,
-  "bg-remover": <Scissors />,
-  "image-compressor": <Minimize2 />,
-  "text-to-pdf": <FileText />,
-  "json-formatter": <Braces />,
-  "case-converter": <FileText />,
-  "uuid-generator": <Key />,
-  "box-shadow-glassmorphism": <Minimize2 />,
-  "mesh-gradient-generator": <Palette />,
-  "image-ocr": <ImageIcon />,
-  "random-drawer": <Dices />,
-  "percentage-calculator": <Percent />,
-}
 
 export default function DashboardPage() {
   return (
@@ -83,32 +47,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-12">
-        {(["Formatters & Text", "Images & Colors", "Generators & Utilities", "CSS & Design", "Calculators & Math"] as const).map((category) => {
-          const categoryTools = tools.filter(t => t.category === category)
-          if (categoryTools.length === 0) return null
-          
-          return (
-            <div key={category}>
-              <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground/80 border-b border-border pb-2">
-                {category}
-              </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {categoryTools.map((tool) => (
-                  <ToolCard
-                    key={tool.href}
-                    href={tool.href}
-                    title={tool.title}
-                    description={tool.description}
-                    icon={toolIcons[tool.slug] ?? <Wrench />}
-                    status={tool.status}
-                  />
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      <ToolsSearch />
     </div>
   )
 }
